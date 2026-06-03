@@ -1,0 +1,4 @@
+Page,ResponseTime,Time,Error,Status,Error Screenshot File Location,Bandwidth
+Axis Bank Current Account Page,12.69,18:26:47,Functional Error,FAIL,/home/apmosys/Music/NGASA/MONT_WEB_MERGED_FRAMEWORK_V5/Logs/2025/June/20/BNK_Axis bank urls 15min/Axis Bank Current Account Page_18_26_47.png,,
+Axis Bank Current Account Page,13.06,18:29:11,Functional Error,FAIL,/home/apmosys/Music/NGASA/MONT_WEB_MERGED_FRAMEWORK_V5/Logs/2025/June/20/BNK_Axis bank urls 15min/Axis Bank Current Account Page_18_29_11.png,,
+Axis Bank Current Account Page,13.82,18:33:21,Functional Error,FAIL,/home/apmosys/Music/NGASA/MONT_WEB_MERGED_FRAMEWORK_V5/Logs/2025/June/20/BNK_Axis bank urls 15min/Axis Bank Current Account Page_18_33_21.png,,
