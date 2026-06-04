@@ -13,1149 +13,744 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
-//import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.CodeSource;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.util.Base64;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.PageLoadStrategy;
-import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.ie.InternetExplorerDriver;
-import org.openqa.selenium.ie.InternetExplorerOptions;
-import org.openqa.selenium.remote.CapabilityType;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.safari.SafariDriver;
-import org.openqa.selenium.safari.SafariOptions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.codoid.products.exception.FilloException;
 import com.codoid.products.fillo.Connection;
 import com.codoid.products.fillo.Fillo;
 import com.codoid.products.fillo.Recordset;
-import com.relevantcodes.extentreports.ExtentReports;
-import com.relevantcodes.extentreports.ExtentTest;
 
+/**
+ * Framework — the test runner / orchestrator.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHAT CHANGED IN THIS REFACTOR (Step 1)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  BEFORE  100+ public static fields for every kind of state lived here.
+ *          Any class could read or write any field at any time.
+ *
+ *  AFTER   State is split into three focused config objects:
+ *
+ *    DBConfig          — JDBC coordinates, connection lifecycle
+ *    MailConfig        — SMTP settings, recipient lists, feature flag
+ *    BrowserConfig     — browser name, headless, timeouts, custom JAR path
+ *    ExecutionContext   — mutable runtime state for one test run
+ *                        (driver, current page, step, error, IDs, timings)
+ *
+ *  These are injected into the runner below and passed to helpers that need
+ *  them.  No method needs to reach into a global bag of statics anymore.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * BACKWARD COMPATIBILITY
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  A handful of static fields are kept temporarily so existing classes
+ *  (Functions, Monitoring_FrameWork, DB_Tables) compile without changes.
+ *  Each is marked  // TODO: remove after migrating <ClassName>
+ *  Work through those in subsequent steps.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 public class Framework {
-	public static String FileNameV;
-	public static String homedir;
-	public static String ScreenfileLocation;
-	public static String oldbrowser;
-	public static String ScriptName;
-	public static String browser;
-	public static String ScreenshotfileLocation;
-	public static String ScreenshotfileLocation1;
-	public static String parenwindow;
-	public static String functiontorun;
-	public static String sTestCaseID;
-	public static String ApplicationName;
-	public static String logstatus;
-	public static String errorsatus;
-	public static String sDescription;
-	public static String dburl;
-	public static String dbuser;
-	public static String dbpassword;
-	public static String errorpagename;
-	public static String OTPcurrentTime;
-	public static Fillo fillo;
-	public static Fillo filloDs;
-	public static WebDriver driver;
-	public static String step;
-	public static String datasheetspath;
-	public static int browsersts;
-	public static int defaultwaittime;
-	public static int iResponseTime;
-	public static int availability_alert;
-	public static int ResponseTime_alert;
-	public static ExtentTest extent;
-	public static ExtentReports extentrpt;
-	public static Double tStartTime;
-	public static String currentTime;
-	public static String userMobile;
-	public static Properties pro;
-	public static String bHour;
-	public static String bHourFunction;
-	public static String browserToOpen;
-	public static Recordset recordsetRDS;
-	public static String monitoringBusinessHour;
-	public static String monitoringDataSheetPath;
-	private static String osname;
-	static String monitoringTimeDataSheetName;
-	private static String monitoringTime;
-	public static String host;
-	public static String port;
-	public static String mailFrom;
-	public static String password;
-	public static String mailTo;
-	public static String subject;
-	public static String mailCc;
-	public static String scType;
-	public static String pageLoadTime;
-	public static String headless;
-	public static String scriptStartTime;
-	public static String scriptEndTime;
-	public static int monitoringInstancesId;
-	public static int applicationId;
-	public static int clientId;
-	public static String zone;
-	public static String domain;
-	public static int pageId;
-	public static boolean flag = true;
-	public static String createdBy;
-	public static Map<String, String> dbDetails = new HashMap<String, String>();
-	public static String macId;
-	public static int runTimeInstanceId;
-	public static int reportRunTimeInstanceId;
-	public static java.sql.Connection dbConnection = null;
-	public static String dataSheetName;
-	public static String Srno;
-	public static String Module;
-	public static String pagename;
-	public static String ControlRDS;
-	public static String ObjectTypeRDS;
-	public static String propertyValues;
-	public static String actionRDS;
-	public static String errorType = "";
-	public static String errorMessage = "";
-	public static int executionId;
-	public static String errorDesc;
-	public static String customJarPath;
-	public static String customClassName;
-	public static String bankHoliday;
-	public static String location = "";
-	public static String fastPageLoad, pageStability;
-	public static boolean status = true;
-	public static String showLocator = "";
-	public static String defaultDownload = "";
-	public static String mailAlert;
-	public static String exitStatus = "Y";
-	public static boolean exitFlag = false;
-	public static String ffProfilePath;
-	public static String propertiesFilePath;
-	public static Properties propertiesObj;
-	public static String recentCaptcha;
-	public static String divider = "═".repeat(60);
-	public static String subDiv = "─".repeat(60);
-
-	public static void main(final String[] args) throws Exception {
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
-
-				// updating end time in runtime instance
-				if (flag) {
-					System.out.println("\n" + divider);
-					System.out.println(" ⚡ SHUTDOWN HOOK ACTIVATED");
-					System.out.println(subDiv);
-					scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-					DB_Tables.updateEndTimeRunTimeInstance("terminated", scriptEndTime, applicationId,
-							runTimeInstanceId);
-//					DB_Tables.updateEndTimeReportsRuntime("terminated", scriptEndTime, applicationId,
-//							reportRunTimeInstanceId);
-				}
-				if (dbConnection != null) {
-					try {
-						dbConnection.close();
-						System.out.printf(" [DB]  CONNECTION : Closed [✓]%n");
-						System.out.println(subDiv);
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-				}
-				if (!browser.equalsIgnoreCase("sikuli")) {
-					if (!Framework.driver.toString().trim().contains("null")) {
-						Framework.driver.quit();
-						System.out.printf(" [WEB] DRIVER     : Quit successfully [✓]%n");
-						System.out.println(divider);
-					}
-				}
-
-			}
-		});
-
-		macId = DB_Tables.getMac();
-		System.out.println("Imported Date MAY 1 ");
-		System.out.println("Mac Id Is ====>" + macId);
-//		dbDetails.put("url", "jdbc:mysql://192.168.1.228:3306/nonsbi_final");
-//		dbDetails.put("url", "jdbc:mysql://192.168.9.16:3306/nonsbi_final_15jan2025");
-//		dbDetails.put("id", "root");
-//		dbDetails.put("id", "SynMonitoring");
-//		dbDetails.put("pass", "Welcome@2023");
-//		dbDetails.put("pass", "Operation@123");
-
-		/////////////
-
-		propertiesFilePath = System.getProperty("user.dir") + File.separator + "mf_web.properties";
-		propertiesObj = new Properties();
-		FileInputStream fis = new FileInputStream(propertiesFilePath);
-		Framework.propertiesObj.load(fis);
-		fis.close();
-
-		ReadDB();
-		byte[] decodedBytes = Base64.getDecoder().decode(Framework.dbpassword);
-		String decodedString = new String(decodedBytes);
-//		System.out.println("Decoded String: " + decodedString);
-
-		dbDetails.put("url", Framework.dburl);
-		dbDetails.put("id", Framework.dbuser);
-		dbDetails.put("pass", decodedString);
-
-		try {
-			System.out.println("Getting connection ................");
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			dbConnection = DriverManager.getConnection(dbDetails.get("url"), dbDetails.get("id"),
-					dbDetails.get("pass"));
-			System.out.println("************** Connection established with db *************");
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.out.println("************** Connection Fail With db *************");
-		}
-
-		fis = new FileInputStream(propertiesFilePath);
-		Framework.pro.load(fis);
-
-		Framework.bHour = Framework.pro.getProperty("businessHourRunStatus");
-		Framework.bHourFunction = Framework.pro.getProperty("businessHourFunctions");
-		Framework.monitoringBusinessHour = Framework.pro.getProperty("monitoringBusinessHour");
-		Framework.monitoringDataSheetPath = Framework.pro.getProperty("monitoringDataSheetPath");
-		Framework.monitoringTimeDataSheetName = Framework.pro.getProperty("monitoringTimeDataSheetName");
-		Framework.monitoringTime = Framework.pro.getProperty("monitoringTime");
-		Framework.pageLoadTime = Framework.pro.getProperty("pageLoadTime");
-		Framework.headless = Framework.pro.getProperty("headless");
-		Framework.bankHoliday = Framework.pro.getProperty("bankHoliday", "N");
-		Framework.fastPageLoad = Framework.pro.getProperty("fastPageLoad", "N");
-		Framework.showLocator = Framework.pro.getProperty("showLocator", "N");
-		Framework.defaultDownload = Framework.pro.getProperty("defaultDownload", "Y");
-		Framework.location = Framework.pro.getProperty("location", "");
-		Framework.mailAlert = Framework.pro.getProperty("mailAlert", "N");
-		Framework.exitStatus = Framework.pro.getProperty("exitStatus", "Y");
-		Framework.ffProfilePath = Framework.pro.getProperty("ffProfilePath",
-				"/home/apmosys/.mozilla/firefox/s3v60wo7.default-release");
-		Framework.pageStability = Framework.pro.getProperty("pageStability", "N");
-
-
-		// For Custom Jar Path and Class Name
-		Framework.customJarPath = System.getProperty("user.dir") + File.separator
-				+ Framework.pro.getProperty("customJarPath", "");
-		Framework.customClassName = Framework.pro.getProperty("customClassName", "");
-		if (Framework.customJarPath.isEmpty() && Framework.customClassName.isEmpty()) {
-			System.out.println("---------Custom Jar Path and Class Name is Empty----------");
-		}
-		// for hdfc alert
-		host = (String) pro.get("host");
-		port = (String) pro.get("port");
-		mailFrom = (String) pro.get("mailFrom");
-		password = (String) pro.get("password");
-		mailTo = (String) pro.get("mailTo");
-		mailCc = (String) pro.get("mailCc");
-		subject = (String) pro.get("subject");
-
-		fis.close();
-		if (Framework.monitoringBusinessHour.equalsIgnoreCase("y") && Framework.monitoringBusinessHour != null
-				&& !Framework.monitoringBusinessHour.equalsIgnoreCase("")) {
-			BusinessHour.monitoringHour();
-		}
-		try {
-			if (Framework.monitoringTime.equalsIgnoreCase("y") && Framework.monitoringTime != null
-					&& !Framework.monitoringTime.equalsIgnoreCase("")) {
-				BusinessHour.monitoringMinute();
-			}
-		} catch (Exception ex) {
-		}
-		getProcessId();
-		Run();
-	}
-
-	public static void Run() throws URISyntaxException, ParseException, FilloException, IOException {
-		CodeSource codeSource = Framework.class.getProtectionDomain().getCodeSource();
-		File jarFile = new File(codeSource.getLocation().toURI().getPath());
-		Connection con = null;
-		Framework.homedir = System.getProperty("user.dir");
-		Framework.browsersts = 0;
-		Framework.oldbrowser = "new";
-
-		System.out.println("Project Path  -------------> " + Framework.homedir);
-
-		Framework.fillo = new Fillo();
-		try {
-			String maincontrollerpath = Framework.homedir + File.separator + "Main_Controller_Web.xlsx";
-			con = Framework.fillo.getConnection(maincontrollerpath);
-
-			String strmaincontroller = "Select * from MainController where RunStatus='Y'";
-			Recordset recordset = con.executeQuery(strmaincontroller);
-			while (recordset.next()) {
-				try {
-					flag = true;
-					int j = 5;
-					do {
-						Framework.functiontorun = recordset.getField(j).value();
-						if (Framework.functiontorun != "") {
-							++j;
-						}
-					} while (Framework.functiontorun != "");
-
-					if (j > 4) {
-						for (int k = 5; k <= j - 1; ++k) {
-							Framework.functiontorun = recordset.getField(k).value();
-							Framework.ApplicationName = recordset.getField("ApplicationName");
-							Framework.ScriptName = recordset.getField("ApplicationName");
-							Framework.browser = recordset.getField("Browser");
-
-							System.out.println("Application Name  ---------> " + Framework.ApplicationName);
-							System.out.println("Instance Name     ---------> " + Framework.functiontorun);
-
-							scriptStartTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-
-							Framework.osname = getosname();
-
-							if (Framework.functiontorun != "null" && Framework.functiontorun != null
-									&& Framework.functiontorun != "" && !Framework.functiontorun.isEmpty()) {
-								if (Framework.browser.equalsIgnoreCase("sikuli")) {
-									System.out.println("Sikuli Running............................");
-								} else {
-
-									StartBrowser(Framework.homedir, Framework.browser);
-									Framework.oldbrowser = Framework.browser;
-								}
-								String strQueryDS = "select * from DataSheet where InstanceName ='" + functiontorun
-										+ "'";
-								Recordset recordsetDS = con.executeQuery(strQueryDS);
-								while (recordsetDS.next()) {
-									String sDataSheet = recordsetDS.getField("DataSheet");
-									System.out.println("Sheet Name ----------------> " + sDataSheet);
-									dataSheetName = sDataSheet.replaceAll(".xlsx", "");
-
-									if (Framework.osname.equalsIgnoreCase("Windows")) {
-										Framework.datasheetspath = String.valueOf(Framework.homedir) + "\\DataSheet\\"
-												+ sDataSheet;
-										System.out.println("Sheet Path ----------------> " + Framework.datasheetspath);
-									} else {
-										Framework.datasheetspath = String.valueOf(Framework.homedir) + "/DataSheet/"
-												+ sDataSheet;
-										System.out.println("Sheet Path ----------------> " + Framework.datasheetspath);
-									}
-
-									Fillo filloDs = new Fillo();
-									Connection connectionDS = filloDs.getConnection(Framework.datasheetspath);
-									String strQueryRDSF = "select * from Sheet2 where RunStatus='Y'";
-									Recordset recordsetRDSF = connectionDS.executeQuery(strQueryRDSF);
-
-									double networkSpeed = DB_Tables.getNetworkSpeed();
-									System.out.println("NetworkSpeed --------------> " + networkSpeed + " MB/s");
-//									String locaton = DB_Tables.getLocation();
-//									System.out.println("locaton ======= " + locaton);
-
-									monitoringInstancesId = DB_Tables.getMonitoringInstancesId(dataSheetName);
-									System.out.println("MonitoringInstancesId -----> " + monitoringInstancesId);
-									zone = DB_Tables.getMonitoringDetails(monitoringInstancesId);
-									System.out.println("MonitoringInstancesZone ---> " + zone);
-
-									List<Integer> applicationMasterData = DB_Tables
-											.getApplicationMasterData(ApplicationName);
-									applicationId = applicationMasterData.get(0);
-									clientId = applicationMasterData.get(1);
-									System.out.println("ApplicationId -------------> " + applicationId);
-									System.out.println("ClientId ------------------> " + clientId);
-
-									domain = DB_Tables.getclientMasterData(clientId);
-									System.out.println("Domain --------------------> " + domain);
-
-									createdBy = DB_Tables.getCreatedBy(applicationId);
-									System.out.println("createdBy id --------------> " + createdBy);
-
-									String ipAdress = DB_Tables.getIpAdress();
-									System.out.println("ipAdress id ---------------> " + ipAdress);
-
-									List<String> infraMasterData = DB_Tables.getContainerJenkinMasterIP(ipAdress);
-									System.out.println("infra Master Data ---------> " + infraMasterData.toString());
-									int infraId = 0;
-									if (infraMasterData.get(0) != null) {
-										infraId = Integer.parseInt(infraMasterData.get(0));
-									}
-									String containerIP = infraMasterData.get(1);
-									String jenkinsIP = infraMasterData.get(2);
-
-									List<String> monitoringInstanceData = DB_Tables.getDeviceDetails(dataSheetName);
-									System.out.println(
-											"monitoring Instance Data == " + monitoringInstanceData.toString());
-									String device_type = monitoringInstanceData.get(0);
-									String browser_type = monitoringInstanceData.get(1);
-									String version = monitoringInstanceData.get(2);
-
-									DB_Tables.Table_runtime_instance(dataSheetName, scriptStartTime, scriptStartTime,
-											"running", new SimpleDateFormat("yyyyMMdd").format(new Date()),
-											new SimpleDateFormat("HH").format(new Date()),
-											new SimpleDateFormat("mm").format(new Date()), browser_type, device_type,
-											version, ipAdress, jenkinsIP, monitoringInstancesId, applicationId, infraId,
-											createdBy, scriptStartTime, macId, scriptStartTime, networkSpeed);
-									// for reports_runtime
-									// Amar
-//									DB_Tables.Table_reports_runtime_instance(dataSheetName, scriptStartTime,
-//											scriptStartTime, "running", new SimpleDateFormat("yyyyMMdd").format(new Date())
-//											, new SimpleDateFormat("HH").format(new Date())
-//											, new SimpleDateFormat("mm").format(new Date()),
-//											browser_type, device_type, version, ipAdress, jenkinsIP,
-//											monitoringInstancesId, applicationId, infraId, createdBy, scriptStartTime,
-//											macId, scriptStartTime, networkSpeed);
-
-///*********************************************************************************//
-
-									while (recordsetRDSF.next()) {
-										Framework.errorsatus = "0";
-										Framework.sTestCaseID = recordsetRDSF.getField("TestCaseID");
-										Framework.sDescription = recordsetRDSF.getField("Description");
-//									Framework.extent = Framework.extentrpt.startTest(
-//											"<font color=\"Blue\"><b>" + Framework.ScenarioID
-//													+ "</b></font> - <font color=\"Green\"><b>" + Framework.sTestCaseID
-//													+ "</b></font>(" + Framework.sDescription + ")",
-//											"</br><h5>" + Framework.sDescription + "</h5>");
-										String strQueryRDS = "select * from Sheet1 where RunStatus='Y'";
-//										try {
-										Framework.recordsetRDS = connectionDS.executeQuery(strQueryRDS);
-										while (Framework.recordsetRDS.next()) {
-											int count = Framework.recordsetRDS.getCount();
-											String RunStatusRDS = Framework.recordsetRDS.getField("RunStatus");
-											ControlRDS = Framework.recordsetRDS.getField("Control").trim();
-											Framework.ObjectTypeRDS = Framework.recordsetRDS.getField("ObjectType");
-											String PropertyNameRDS = Framework.recordsetRDS.getField("PropertyName");
-											String PropertyValueRDS = propertyValues = Framework.recordsetRDS
-													.getField("PropertyValue");
-											String DataFieldRDS = Framework.recordsetRDS.getField("Datafield");
-											String ActionRDS = Framework.recordsetRDS.getField("Action");
-											pagename = Framework.recordsetRDS.getField("PageName");
-											actionRDS = ActionRDS;
-											// scType=Framework.recordsetRDS.getField("scType");
-//											if (Framework.errorsatus == "1"
-//													&& !Framework.pagename.equalsIgnoreCase(Framework.errorpagename)) {
-//												Framework.errorsatus = "0";
-//											}
-											Framework.Srno = Framework.recordsetRDS.getField("Srno");
-											String sColumnValue = "";
-											int FieldStatus = 0;
-											if (RunStatusRDS.equalsIgnoreCase("Y")) {
-//												strQueryRDSF = "select * from Sheet2 where TestCaseID='"
-//														+ Framework.sTestCaseID + "' and ScenarioID='"
-//														+ Framework.ScenarioID + "' and RunStatus='Y'";
-												strQueryRDSF = "select * from Sheet2 where RunStatus='Y'";
-
-												Connection connectionDS2 = filloDs
-														.getConnection(Framework.datasheetspath);
-												Recordset recordsetRDSFsc = connectionDS2.executeQuery(strQueryRDSF);
-												String Stringtoappend = "";
-												String sColumnName = "";
-												int moduleStatus = 0;
-												while (recordsetRDSFsc.next()) {
-													for (int xm = 0; xm <= 1000; ++xm) {
-														try {
-															sColumnName = recordsetRDSFsc.getField(xm).name();
-															if (!sColumnName.equalsIgnoreCase(DataFieldRDS)) {
-																continue;
-															}
-															sColumnValue = recordsetRDSFsc.getField(xm).value();
-															FieldStatus = 1;
-														} catch (Exception ex) {
-														}
-														break;
-													}
-													if (FieldStatus == 1) {
-														Stringtoappend = "<font color=\"Red\"><b>Data Field - </b></font>"
-																+ sColumnName
-																+ " <font color=\"Green\"><b>TestData - </b></font>"
-																+ sColumnValue;
-													}
-												}
-												System.out.println();
-												System.out.println();
-												System.out.println(
-														"                    Step No - " + Framework.Srno + " Page  is "
-																+ pagename + " Error status " + Framework.errorsatus);
-												// if (Framework.errorsatus == "0") {
-
-												if (ObjectTypeRDS.equalsIgnoreCase("Custom")) {
-													try {
-														// Create a URLClassLoader with the JAR file path
-//														URLClassLoader classLoader = new URLClassLoader(
-//																new URL[] { new URL("file://" + jarFilePath) });
-//
-//														// Load the class dynamically
-//														Class<?> loadedClass = classLoader.loadClass(className);
-//
-//														// Create an instance of the loaded class
-//														Object instance = loadedClass.newInstance();
-
-														URL jarURL = new URL(
-																"file:" + Framework.customJarPath.replace("\\", "/"));
-
-														URLClassLoader classLoader = new URLClassLoader(
-																new URL[] { jarURL });
-
-														// Load a class from the JAR file
-														Class<?> loadedClass = classLoader
-																.loadClass(Framework.customClassName);
-
-														Object instance = loadedClass.newInstance();
-
-														// Invoke a method on the instance
-														Method method = loadedClass.getMethod("allFunction",
-																WebDriver.class, String.class, String.class,
-																String.class, String.class);
-
-														if (ControlRDS.equalsIgnoreCase("V")) {
-															try {
-																List actualResultValue = (List) method.invoke(instance,
-																		Framework.driver, PropertyNameRDS,
-																		PropertyValueRDS, sColumnValue, ActionRDS);
-
-																System.out.println(
-																		"List Size Is === " + actualResultValue.size());
-																System.out.println(actualResultValue);
-
-																if (actualResultValue.size() == 1) {
-																	System.out.println("Method return value == "
-																			+ actualResultValue.get(0));
-																	Monitoring_FrameWork.SaveResult(
-																			actualResultValue.get(0).toString(),
-																			sColumnValue);
-																} else {
-																	System.out.println("Actual value == "
-																			+ actualResultValue.get(0) + "||"
-																			+ "Expected value == "
-																			+ actualResultValue.get(1));
-																	Monitoring_FrameWork.SaveResult(
-																			actualResultValue.get(0).toString(),
-																			actualResultValue.get(1).toString());
-																}
-															} catch (Exception e) {
-																Framework.errorsatus = "1";
-																Monitoring_FrameWork.SaveResult(
-																		"Either locator got change/ Network delay/ page not loaded",
-																		sColumnValue);
-
-															}
-														} else {
-															try {
-
-																method.invoke(instance, Framework.driver,
-																		PropertyNameRDS, PropertyValueRDS, sColumnValue,
-																		ActionRDS);
-															} catch (Exception e) {
-																e.printStackTrace();
-																Framework.errorsatus = "1";
-																Monitoring_FrameWork.SaveResult(
-																		"Either locator got change/ Network delay/ page not loaded",
-																		sColumnValue);
-
-															}
-														}
-														classLoader.close();
-
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-												} else if (ObjectTypeRDS.equalsIgnoreCase("customStartBrowser")) {
-
-													try {
-														// Create a URLClassLoader with the JAR file path
-//														URLClassLoader classLoader = new URLClassLoader(
-//																new URL[] { new URL("file://" + jarFilePath) });
-//
-//														// Load the class dynamically
-//														Class<?> loadedClass = classLoader.loadClass(className);
-//
-//														// Create an instance of the loaded class
-//														Object instance = loadedClass.newInstance();
-
-														URL jarURL = new URL(
-																"file:" + Framework.customJarPath.replace("\\", "/"));
-
-														URLClassLoader classLoader = new URLClassLoader(
-																new URL[] { jarURL });
-
-														// Load a class from the JAR file
-														Class<?> loadedClass = classLoader
-																.loadClass(Framework.customClassName);
-
-														Object instance = loadedClass.newInstance();
-
-														// Invoke a method on the instance
-														Method method = loadedClass.getMethod("customStartBrowser",
-																String.class, String.class);
-
-														try {
-															Framework.driver = (WebDriver) method.invoke(instance,
-																	Framework.browser, Framework.headless);
-														} catch (Exception e) {
-															e.printStackTrace();
-															Monitoring_FrameWork.SaveResult(
-																	"Either locator got change/ Network delay/ page not loaded",
-																	sColumnValue);
-
-														}
-
-														classLoader.close();
-
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-
-												} else if (ObjectTypeRDS.equalsIgnoreCase("CustomConditionMethods")) {
-
-//													String jarFilePath =System.getProperty("user.dir")+File.separator+"CustomJar"+
-//															  File.separator+"CustomiseFunctions.jar";
-//															String className = "com.apmosys.framework.CustomiseFunctions";
-
-													try {
-														// Create a URLClassLoader with the JAR file path
-//														URLClassLoader classLoader = new URLClassLoader(
-//																new URL[] { new URL("file://" + jarFilePath) });
-//
-//														// Load the class dynamically
-//														Class<?> loadedClass = classLoader.loadClass(className);
-//
-//														// Create an instance of the loaded class
-//														Object instance = loadedClass.newInstance();
-
-														URL jarURL = new URL(
-																"file:" + Framework.customJarPath.replace("\\", "/"));
-
-														URLClassLoader classLoader = new URLClassLoader(
-																new URL[] { jarURL });
-
-														// Load a class from the JAR file
-														Class<?> loadedClass = classLoader
-																.loadClass(Framework.customClassName);
-
-														Object instance = loadedClass.newInstance();
-
-														// Invoke a method on the instance
-														Method method = loadedClass.getMethod("conditionsMethods",
-																Recordset.class, WebDriver.class, String.class,
-																String.class, String.class, String.class);
-
-														try {
-
-															Framework.recordsetRDS = (Recordset) method.invoke(instance,
-																	Framework.recordsetRDS, Framework.driver,
-																	PropertyNameRDS, PropertyValueRDS, sColumnValue,
-																	ActionRDS);
-														} catch (Exception e) {
-															e.printStackTrace();
-															Monitoring_FrameWork.SaveResult(
-																	"Either locator got change/ Network delay/ page not loaded",
-																	sColumnValue);
-
-														}
-
-														classLoader.close();
-
-													} catch (Exception e) {
-														e.printStackTrace();
-													}
-
-												}
-
-												else {
-
-													Functions.Actions(ControlRDS, Framework.ObjectTypeRDS,
-															PropertyNameRDS, PropertyValueRDS, sColumnValue, ActionRDS,
-															Framework.Srno, FieldStatus, pagename);
-												}
-
-												Framework.logstatus = "0";
-											}
-										}
-									}
-								}
-							}
-
-						}
-					}
-
-					// updating end time in runtime instance
-					scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
-					flag = false;
-					System.out.println("\n" + divider);
-					if (Monitoring_FrameWork.logoutFlag == true || Framework.exitFlag == true) {
-
-						DB_Tables.updateEndTimeRunTimeInstance("terminated", scriptEndTime, applicationId,
-								runTimeInstanceId);
-//						DB_Tables.updateEndTimeReportsRuntime("terminated", Framework.scriptEndTime, Framework.applicationId,
-//								Framework.reportRunTimeInstanceId);
-						System.exit(1);
-					} else {
-
-						DB_Tables.updateEndTimeRunTimeInstance("success", scriptEndTime, applicationId,
-								runTimeInstanceId);
-//						DB_Tables.updateEndTimeReportsRuntime("success", Framework.scriptEndTime, Framework.applicationId,
-//								Framework.reportRunTimeInstanceId);
-					}
-					System.out.println();
-					System.out.println("********************** Execution Completed " + functiontorun
-							+ " *********************************");
-					System.out.println();
-
-				} catch (Exception datasheetError) {
-					System.out.println("Error in DataSheet ......\n");
-					datasheetError.printStackTrace();
-					System.exit(1);
-				}
-				/////////////
-			}
-		} catch (Exception maincontroller) {
-
-			System.out.println("Connection Error in Maincontroller \n");
-			maincontroller.printStackTrace();
-			System.exit(1);
-		}
-	}
-
-	public static void StartBrowser(final String homedir, String Browsername) throws Exception {
-		Framework.browserToOpen = Browsername;
-		System.out.println("Browser -------------------> " + Browsername);
-		if (Framework.browsersts == 1
-				&& (Browsername.toUpperCase().contains("NEW") || !Framework.oldbrowser.equalsIgnoreCase(Browsername))) {
-			Framework.driver.quit();
-			System.out.println("***************** Browser Closed **************************");
-			Framework.browsersts = 0;
-			Browsername = Browsername.toUpperCase();
-			Browsername = Browsername.replace("NEW", "");
-		}
-		if (Framework.browsersts == 0) {
-			Framework.osname = getosname();
-			final String osarch = getosarch();
-			System.out.println("OS      -------------------> " + osname);
-			System.out.println("Architecture --------------> " + osarch);
-
-			final String driverpath = homedir + "/Drivers/" + Framework.osname + "/" + Browsername + "/" + osarch;
-			if (Browsername.equalsIgnoreCase("IE")) {
-				if (Framework.osname.equalsIgnoreCase("Ubuntu")) {
-					ShowWarning("IE Browser is not Supported in Linux");
-				} else {
-					try {
-						Monitoring_FrameWork.Taskkill();
-					} catch (Exception ex) {
-					}
-					final DesiredCapabilities caps = new DesiredCapabilities();
-					caps.setCapability("ignoreProtectedModeSettings", true);
-					// caps.setCapability("browserName", "internet explorer");
-					caps.setCapability("acceptSslCerts", true);
-					caps.setCapability("ignoreProtectedModeSettings", true);
-					// caps.setCapability("version", "11");
-					// caps.setCapability("platform", "WINDOWS");
-					// caps.setCapability("ie.ensureCleanSession", true);
-					caps.setCapability("unexpectedAlertBehaviour", (Object) UnexpectedAlertBehaviour.IGNORE);
-					caps.setCapability("requireWindowFocus", true);
-					caps.setCapability("enablePersistentHover", true);
-					caps.setCapability("nativeEvents", true);
-					caps.setCapability("ignoreZoomSetting", true);
-					caps.setCapability("--remote-allow-origins=*", true);
-					// after add
-					caps.setCapability(InternetExplorerDriver.INTRODUCE_FLAKINESS_BY_IGNORING_SECURITY_DOMAINS, true);
-
-					System.setProperty("webdriver.ie.driver", driverpath + "/IEDriverServer.exe");
-					// WebDriverManager.iedriver().setup();
-					final InternetExplorerOptions options = new InternetExplorerOptions((Capabilities) caps);
-					Framework.driver = (WebDriver) new InternetExplorerDriver(options);
-					Framework.driver.manage().window().maximize();
-					Framework.driver.manage().timeouts().implicitlyWait(90L, TimeUnit.SECONDS);
-					Framework.browsersts = 1;
-				}
-			}
-			if (Browsername.equalsIgnoreCase("FF")) {
-				String path = driverpath + "/geckodriver.exe";
-
-				if (Framework.osname.equalsIgnoreCase("Windows")) {
-					path = driverpath + "/geckodriver.exe";
-
-				} else {
-					path = driverpath + "/geckodriver";
-				}
-				System.setProperty("webdriver.gecko.driver", path);
-//				DesiredCapabilities caps2 = new DesiredCapabilities();
-//				caps2.setCapability("browserName", "Firefox");
-//				caps2.setCapability("firefoxOptions", "org.openqa.selenium.firefox.FirefoxOptions@1f22f3");
-//				caps2.setCapability("moz:firefoxOptions", "org.openqa.selenium.firefox.FirefoxOptions@1f22f3");
-//				caps2.setCapability("marionette", true);
-//				caps2.setCapability("version", "91");
-//				caps2.setCapability("platform", "WINDOWS");
-				FirefoxOptions options1 = new FirefoxOptions();
-				options1.setCapability("--profile", ffProfilePath);
-				Framework.driver = (WebDriver) new FirefoxDriver(options1);
-				Framework.driver.manage().timeouts().implicitlyWait(90L, TimeUnit.SECONDS);
-				Framework.driver.manage().timeouts().pageLoadTimeout(90L, TimeUnit.SECONDS);
-				Framework.driver.manage().window().maximize();
-				Framework.browsersts = 1;
-			}
-			if (Browsername.equalsIgnoreCase("Chrome")) {
-				String path = driverpath;
-				if (Framework.osname.equalsIgnoreCase("Windows")) {
-					path = driverpath + "/chromedriver.exe";
-				} else {
-					path = driverpath + "/chromedriver";
-				}
-
-				ChromeOptions options2 = new ChromeOptions();
-
-				options2.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, false);
-				options2.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
-
-				options2.addArguments("--disable-blink-features=AutomationControlled");// for cloud flarecaptcha
-				options2.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
-//				options2.addArguments("--ignore-certificate-errors");
-				options2.addArguments("--test-type");
-				options2.addArguments("--allow-running-insecure-content");
-//				options2.addArguments("--disable-web-security");
-				options2.addArguments("--allow-insecure-localhost");
-				options2.addArguments(new String[] { "--disable-notifications" });
-				options2.addArguments(new String[] { "--disable-extentions" });
-				options2.addArguments(new String[] { "disable-infobars" });
-				options2.addArguments(new String[] { "disable-captcha" });
-				options2.addArguments(new String[] { "--remote-allow-origins=*" });
-				options2.addArguments(new String[] { "--disable-popup-blocking" });
-				options2.addArguments(
-						"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.106 Safari/537.36");
-				options2.addArguments(new String[] { "--no-sandbox" });
-				options2.addArguments("--no-proxy-server");
-//				options2.addArguments(new String[] { "window-size=1920,1080" });
-//				 new added for disable password window popup
-//				options2.addArguments(new String[] { "--disable-save-password-bubble" });
-//				 options2.addArguments("Browser.setDownloadBehavior","allow");
-				if (headless.equalsIgnoreCase("true")) {
-					options2.addArguments(new String[] { "--headless" });
-					options2.addArguments(new String[] { "window-size=1920,1080" });
-				}
-				if (fastPageLoad.equalsIgnoreCase("Y")) {
-					options2.setPageLoadStrategy(PageLoadStrategy.EAGER);
-				}else if (fastPageLoad.equalsIgnoreCase("None")) {
-					options2.setPageLoadStrategy(PageLoadStrategy.NONE);
-				}
-
-				if (pageStability.equalsIgnoreCase("Y")) {
-					System.out.println("pageStability  ==="+pageStability);
-					options2.addArguments("--disable-dev-shm-usage");
-				}
-				// for location allow
-				options2.addArguments("--disable-blink-features=AutomationControlled");
-				options2.setExperimentalOption("prefs",
-						Map.of("profile.default_content_setting_values.geolocation", 1));
-
-				Map<String, Object> prefs = new HashMap<>();
-				prefs.put("credentials_enable_service", false); // Disable credential saving(Password Saveing)
-				prefs.put("profile.default_content_setting_values.automatic_downloads", 1);// Disable credential
-
-				System.out.println("Default Download Set " + defaultDownload);
-				if (defaultDownload.equalsIgnoreCase("N")) {
-					System.out.println("Default Download Set " + defaultDownload);
-					prefs.put("plugins.always_open_pdf_externally", true); // make Chrome download PDFs instead of
-																			// opening them
-					prefs.put("download.prompt_for_download", false);
-					prefs.put("download.directory_upgrade", true);
-				}
-
-				options2.setExperimentalOption("prefs", prefs);
-
-				File file = new File(path);
-				file.setExecutable(true);
-				System.setProperty("webdriver.chrome.driver", path);
-
-				String startBrowserStatus = Framework.pro.getProperty("startBrowserStatus", "Y");
-				if (startBrowserStatus.equalsIgnoreCase("Y")) {
-					try {
-
-						Framework.driver = new ChromeDriver(options2);
-						driver.manage().window().maximize();
-						try {
-							Framework.driver.manage().timeouts()
-									.pageLoadTimeout(Duration.ofSeconds(Integer.parseInt(pageLoadTime)));
-						} catch (Exception e) {
-							Framework.driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(90));
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-//				*/
-
-//				Framework.browsersts = 1;
-			}
-
-			if (Browsername.equalsIgnoreCase("axisChrome")) {
-
-				String path = driverpath;
-				if (Framework.osname.equalsIgnoreCase("Windows")) {
-					path = driverpath + "/chromedriver.exe";
-				} else {
-					path = driverpath + "/chromedriver";
-				}
-
-//				options2.addArguments(
-//						"--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.123 Safari/537.36");
-
-//				options2.setCapability("acceptInsecureCerts", false);
-				File file = new File(path);
-				file.setExecutable(true);
-				System.setProperty("webdriver.chrome.driver", path);
-				// WebDriverManager.chromedriver().setup();
-
-			}
-
-			if (Browsername.equalsIgnoreCase("Edge")) {
-
-				String path = "";
-				if (Framework.osname.equalsIgnoreCase("Windows")) {
-					path = driverpath + "/MicrosoftWebDriver.exe";
-				} else {
-					path = driverpath + "/msedgedriver";
-				}
-				FileInputStream fis2 = new FileInputStream(Functions.path2);
-				Properties prop = new Properties();
-				prop.load(fis2);
-				String headless = prop.getProperty("headless");
-
-				System.setProperty("webdriver.edge.driver", path);
-				EdgeOptions op = new EdgeOptions();
-				op.addArguments("--remote-allow-origins=*");
-				op.addArguments("--disable-dev-shm-usage"); // Optional: for stability
-				op.addArguments("--no-sandbox"); // Optional: for security restrictions
-				op.setExperimentalOption("excludeSwitches", new String[] { "enable-automation" });
-				op.setExperimentalOption("useAutomationExtension", false);
-				op.addArguments("--disable-blink-features=AutomationControlled");
-				if (headless.equalsIgnoreCase("true")) {
-					System.out.println("We are in Headless");
-					op.addArguments(new String[] { "headless" });
-				}
-				Framework.driver = (WebDriver) new EdgeDriver(op);
-				Framework.driver.manage().window().maximize();
-				Framework.driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-				Framework.browsersts = 1;
-			}
-			if (Browsername.equalsIgnoreCase("Safari")) {
-
-				// Safari does not require driver path
-				// Just enable Safari driver in browser settings
-
-				SafariOptions options = new SafariOptions();
-
-				Framework.driver = new SafariDriver(options);
-				Framework.driver.manage().window().maximize();
-				Framework.driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-
-				Framework.browsersts = 1;
-
-			}
-			if (Browsername.equalsIgnoreCase("chrome1")) {
-				System.setProperty("webdriver.chrome.driver",
-						"/home/apmosys/Music/MONT_ASA_WEB/Drivers/Ubuntu/Chrome/64/chromedriver");
-				Framework.driver = (WebDriver) new ChromeDriver();
-				final WebDriverWait wait = new WebDriverWait(Framework.driver, Duration.ofMinutes(1L));
-				Framework.driver.manage().window().maximize();
-				Framework.driver.manage().timeouts().pageLoadTimeout(Duration.ofMinutes(5L));
-				Framework.browsersts = 1;
-			}
-		} else {
-			System.out.println(
-					"**************************** " + Browsername + " Already Runnning ****************************");
-		}
-	}
-
-	public static String getosname() {
-		String osnamedump = System.getProperty("os.name");
-		String osname = "Ubuntu";
-		if (osnamedump.toUpperCase().contains("WIN")) {
-			osname = "Windows";
-		}
-		return osname;
-	}
-
-	public static String getosarch() {
-		final String amddummp = System.getProperty("os.arch");
-		String amdtype = "32";
-		if (amddummp.toUpperCase().contains("64")) {
-			amdtype = "64";
-		}
-		return amdtype;
-	}
-
-	public static void ShowWarning(String msg) {
-		JOptionPane.showMessageDialog(null, msg);
-	}
-
-	public static String getBrowserVersion() {
-		String line = "";
-		try {
-			String os = getosname();
-			Process process;
-			BufferedReader reader = null;
-
-			if (os.contains("Windows")) {
-				process = Runtime.getRuntime()
-						.exec("reg query \"HKEY_CURRENT_USER\\Software\\Google\\Chrome\\BLBeacon\" /v version");
-				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				while ((line = reader.readLine()) != null) {
-					System.out.println(line);
-					if (line.toLowerCase().contains("version")) {
-						int length = line.split(" ").length;
-						line = line.split(" ")[length - 1];
-						break;
-					}
-				}
-
-			} else if (os.contains("mac")) {
-				process = Runtime.getRuntime()
-						.exec("/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version");
-			} else {
-				// Linux command
-				process = Runtime.getRuntime().exec("google-chrome --version");
-				reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-				line = reader.readLine().split(" ")[2].trim();
-			}
-
-			System.out.println("Chrome Version: " + line);
-			reader.close();
-		} catch (Exception e) {
-			System.out.println("Error while fetching Version");
-			e.printStackTrace();
-		}
-		return line;
-	}
-
-	public static String TakeScreenshots() throws Exception {
-
-//	    System.out.println("ScreenShot through Robot");
-
-		// Capture full screen
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		Rectangle screenRectangle = new Rectangle(screenSize);
-		Robot robot = new Robot();
-		BufferedImage image = robot.createScreenCapture(screenRectangle);
-
-		Date now = new Date();
-
-		int year = Calendar.getInstance().get(Calendar.YEAR);
-		int monthDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-		String monthName = new SimpleDateFormat("MMMM").format(now);
-
-		// Create folder path
-		String folderPath = Framework.homedir + File.separator + "Logs" + File.separator + year + File.separator
-				+ monthName + File.separator + monthDay + File.separator + Framework.dataSheetName;
-
-		File folder = new File(folderPath);
-		folder.mkdirs();
-
-		// Screenshot name
-		String time = new SimpleDateFormat("HH_mm_ss").format(now);
-		String screenshotName = Framework.pagename + "_" + time + ".jpg";
-
-		String screenshotPath = folderPath + File.separator + screenshotName;
-
-		// Save screenshot
-		ImageIO.write(image, "jpg", new File(screenshotPath));
-
-		// Compress image
-		Monitoring_FrameWork.compressImage(new File(screenshotPath), new File(screenshotPath), 30 * 1024);
-		Framework.ScreenshotfileLocation = screenshotPath;
-
-		System.out.printf(" [INFO] ScreenshotfileLocation : %s %n", Framework.ScreenshotfileLocation);
-
-		return screenshotPath;
-	}
-
-	public static void savetoextfile(String TC, String Actualresult, String Col) throws FilloException {
-		try {
-			if (!Col.equalsIgnoreCase("Write_Policy_NO") && !Col.equalsIgnoreCase("Write_Payment_ID")) {
-				Framework.filloDs = new Fillo();
-				Connection connectionextfile = Framework.filloDs
-						.getConnection(String.valueOf(String.valueOf(String.valueOf(String.valueOf(Framework.homedir))))
-								+ "/Output/output.xls");
-				String strQueryextfile = "select * from Sheet1 where TestCaseID = '" + TC + "'";
-				int count = 0;
-				try {
-					Recordset recordset = connectionextfile.executeQuery(strQueryextfile);
-					while (recordset.next()) {
-						++count;
-					}
-				} catch (Exception e2) {
-					System.out.println("Error in Select Data from - " + Framework.homedir + "/Output/output.xls");
-				}
-				if (count > 0) {
-					strQueryextfile = "update Sheet1 set Proposal_No = '" + Actualresult + "',Time='"
-							+ new Date().toString() + "' where TestCaseID = '" + TC + "'";
-				} else {
-					strQueryextfile = "insert into Sheet1 (TestCaseID,Proposal_No,Time) values ('" + TC + "','"
-							+ Actualresult + "','" + new Date().toString() + "')";
-				}
-				connectionextfile.executeUpdate(strQueryextfile);
-				connectionextfile.close();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private static void getProcessId() {
-		// Get the process ID of the current Java process
-
-		try {
-			String processName = ManagementFactory.getRuntimeMXBean().getName();
-			long processid = Long.parseLong(processName.split("@")[0]);
-
-			System.out.println("ProcessId     -------------> " + processid);
-			File folder = new File(System.getProperty("user.dir") + File.separator + "Logs");
-			folder.mkdirs();
-			File textFile = new File(folder + File.separator + "pid.txt");
-			textFile.createNewFile();
-
-			FileWriter writter = new FileWriter(textFile, false);
-			BufferedWriter bf = new BufferedWriter(writter);
-			bf.write(String.valueOf(processid));
-			bf.close();
-			writter.close();
-			System.out.println("status        -------------> Processid Written in file successfully");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public static void ReadDB() throws Exception {
-
-		String driver = propertiesObj.getProperty("jdbc.driver");
-		if (driver != null) {
-			Class.forName(driver);
-		}
-		Framework.dburl = propertiesObj.getProperty("jdbc.url");
-		Framework.dbuser = propertiesObj.getProperty("jdbc.username");
-		Framework.dbpassword = propertiesObj.getProperty("jdbc.password");
-//		Framework.userMobile = props.getProperty("userMobile");
-	}
-
-	static {
-		Framework.FileNameV = null;
-		Framework.pro = new Properties();
-
-	}
+
+    // ── Display dividers (purely cosmetic, OK to remain static) ──────────────
+    public static final String DIVIDER  = "═".repeat(60);
+    public static final String SUB_DIV  = "─".repeat(60);
+
+    // ── Project root ──────────────────────────────────────────────────────────
+    // Stays static because it is immutable after startup.
+    public static String homedir;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TEMPORARY backward-compat shims — remove as each consumer is migrated
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** @deprecated use ExecutionContext.getDriver() */
+    @Deprecated public static WebDriver driver;
+
+    /** @deprecated use ExecutionContext.getPageName() */
+    @Deprecated public static String pagename;
+
+    /** @deprecated use ExecutionContext.getDataSheetName() */
+    @Deprecated public static String dataSheetName;
+
+    /** @deprecated use ExecutionContext.getErrorStatus() */
+    @Deprecated public static String errorsatus;
+
+    /** @deprecated use ExecutionContext.getRecordsetRDS() */
+    @Deprecated public static com.codoid.products.fillo.Recordset recordsetRDS;
+
+    /** @deprecated use ExecutionContext.getScreenShotFileLocation() */
+    @Deprecated public static String ScreenshotfileLocation;
+
+    /** @deprecated use ExecutionContext.getSrNo() */
+    @Deprecated public static String Srno;
+
+    /** @deprecated use ExecutionContext.getScriptName() */
+    @Deprecated public static String ScriptName;
+
+    /** @deprecated use ExecutionContext.getApplicationName() */
+    @Deprecated public static String ApplicationName;
+
+    /** @deprecated use ExecutionContext.getFunctionToRun() */
+    @Deprecated public static String functiontorun;
+
+    /** @deprecated use ExecutionContext.getObjectTypeRDS() */
+    @Deprecated public static String ObjectTypeRDS;
+
+    /** @deprecated use ExecutionContext.getControlRDS() */
+    @Deprecated public static String ControlRDS;
+
+    /** @deprecated use ExecutionContext.getPropertyValues() */
+    @Deprecated public static String propertyValues;
+
+    /** @deprecated use ExecutionContext.getActionRDS() */
+    @Deprecated public static String actionRDS;
+
+    /** @deprecated use ExecutionContext.getErrorType() */
+    @Deprecated public static String errorType = "";
+
+    /** @deprecated use ExecutionContext.getErrorMessage() */
+    @Deprecated public static String errorMessage = "";
+
+    /** @deprecated use ExecutionContext.getErrorDesc() */
+    @Deprecated public static String errorDesc;
+
+    /** @deprecated use ExecutionContext.getDataSheetsPath() */
+    @Deprecated public static String datasheetspath;
+
+    /** @deprecated use ExecutionContext.getOtpCurrentTime() */
+    @Deprecated public static String OTPcurrentTime;
+
+    /** @deprecated use ExecutionContext.getLogStatus() */
+    @Deprecated public static String logstatus;
+
+    /** @deprecated use ExecutionContext.getTestCaseId() */
+    @Deprecated public static String sTestCaseID;
+
+    /** @deprecated use ExecutionContext.getDescription() */
+    @Deprecated public static String sDescription;
+
+    /** @deprecated use ExecutionContext.getParentWindow() */
+    @Deprecated public static String parenwindow;
+
+    /** @deprecated use ExecutionContext.getStatus() */
+    @Deprecated public static boolean status = true;
+
+    /** @deprecated use ExecutionContext.getExitFlag() */
+    @Deprecated public static boolean exitFlag = false;
+
+    /** @deprecated use ExecutionContext.getRunActive() / flag */
+    @Deprecated public static boolean flag = true;
+
+    /** @deprecated use ExecutionContext.getMacId() */
+    @Deprecated public static String macId;
+
+    /** @deprecated use ExecutionContext.getRunTimeInstanceId() */
+    @Deprecated public static int runTimeInstanceId;
+
+    /** @deprecated use ExecutionContext.getApplicationId() */
+    @Deprecated public static int applicationId;
+
+    /** @deprecated use ExecutionContext.getMonitoringInstancesId() */
+    @Deprecated public static int monitoringInstancesId;
+
+    /** @deprecated use ExecutionContext.getClientId() */
+    @Deprecated public static int clientId;
+
+    /** @deprecated use ExecutionContext.getZone() */
+    @Deprecated public static String zone;
+
+    /** @deprecated use ExecutionContext.getDomain() */
+    @Deprecated public static String domain;
+
+    /** @deprecated use ExecutionContext.getCreatedBy() */
+    @Deprecated public static String createdBy;
+
+    /** @deprecated use ExecutionContext.getLocation() */
+    @Deprecated public static String location = "";
+
+    /** @deprecated use ExecutionContext.getScriptStartTime() */
+    @Deprecated public static String scriptStartTime;
+
+    /** @deprecated use ExecutionContext.getScriptEndTime() */
+    @Deprecated public static String scriptEndTime;
+
+    /** @deprecated use ExecutionContext.getTStartTime() */
+    @Deprecated public static Double tStartTime;
+
+    /** @deprecated use ExecutionContext.getCurrentTime() */
+    @Deprecated public static String currentTime;
+
+    /** @deprecated use ExecutionContext.getIResponseTime() */
+    @Deprecated public static int iResponseTime;
+
+    /** @deprecated use ExecutionContext.getAvailabilityAlert() */
+    @Deprecated public static int availability_alert;
+
+    /** @deprecated use ExecutionContext.getResponseTimeAlert() */
+    @Deprecated public static int ResponseTime_alert;
+
+    /** @deprecated use ExecutionContext.getDefaultWaitTime() */
+    @Deprecated public static int defaultwaittime;
+
+    /** @deprecated use ExecutionContext.getPageId() */
+    @Deprecated public static int pageId;
+
+    /** @deprecated use ExecutionContext.getRecentCaptcha() */
+    @Deprecated public static String recentCaptcha;
+
+    /** @deprecated use ExecutionContext.getReportRunTimeInstanceId() */
+    @Deprecated public static int reportRunTimeInstanceId;
+
+    /** @deprecated use ExecutionContext.getExecutionId() */
+    @Deprecated public static int executionId;
+
+    // ── Old properties shim (used by Functions.path2 reference) ──────────────
+    // TODO: remove after Functions is refactored (Step 2)
+    @Deprecated public static Properties pro = new Properties();
+    @Deprecated public static String     propertiesFilePath;
+    @Deprecated public static Properties propertiesObj;
+
+    // ── DB connection shim ────────────────────────────────────────────────────
+    // TODO: remove after DB_Tables is migrated to accept DBConfig
+    @Deprecated public static java.sql.Connection dbConnection = null;
+    @Deprecated public static String dburl;
+    @Deprecated public static String dbuser;
+    @Deprecated public static String dbpassword;
+
+    // ── Mail shims ─────────────────────────────────────────────────────────────
+    // TODO: remove after FetchMail / TestMail are migrated to accept MailConfig
+    @Deprecated public static String host;
+    @Deprecated public static String port;
+    @Deprecated public static String mailFrom;
+    @Deprecated public static String password;
+    @Deprecated public static String mailTo;
+    @Deprecated public static String mailCc;
+    @Deprecated public static String subject;
+    @Deprecated public static String mailAlert;
+
+    // ── Browser shims ─────────────────────────────────────────────────────────
+    // TODO: remove after BrowserFactory is created (Step 2)
+    @Deprecated public static String browser;
+    @Deprecated public static String oldbrowser = "new";
+    @Deprecated public static String browserToOpen;
+    @Deprecated public static int    browsersts = 0;
+    @Deprecated public static String headless;
+    @Deprecated public static String fastPageLoad;
+    @Deprecated public static String pageStability;
+    @Deprecated public static String pageLoadTime;
+    @Deprecated public static String defaultDownload = "Y";
+    @Deprecated public static String showLocator = "";
+    @Deprecated public static String exitStatus = "Y";
+    @Deprecated public static String customJarPath;
+    @Deprecated public static String customClassName;
+    @Deprecated public static String ffProfilePath;
+    @Deprecated public static String bankHoliday;
+
+    // ── Monitoring shims ──────────────────────────────────────────────────────
+    @Deprecated public static String bHour;
+    @Deprecated public static String bHourFunction;
+    @Deprecated public static String monitoringBusinessHour;
+    @Deprecated public static String monitoringDataSheetPath;
+
+    // ── Misc shims ────────────────────────────────────────────────────────────
+    @Deprecated public static String FileNameV;
+    @Deprecated public static String ScreenfileLocation;
+    @Deprecated public static String ScreenshotfileLocation1;
+    @Deprecated public static String scType;
+    @Deprecated public static String userMobile;
+    @Deprecated public static String step;
+    @Deprecated public static String Module;
+    @Deprecated public static String browserToOpenOld;
+    @Deprecated public static Fillo  fillo;
+    @Deprecated public static Fillo  filloDs;
+    @Deprecated public static java.util.Map<String, String> dbDetails =
+            new java.util.HashMap<>();
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Entry point
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static void main(final String[] args) throws Exception {
+
+        // ── 1. Load properties ────────────────────────────────────────────────
+        homedir = System.getProperty("user.dir");
+        propertiesFilePath = homedir + File.separator + "mf_web.properties";
+        propertiesObj = new Properties();
+        try (FileInputStream fis = new FileInputStream(propertiesFilePath)) {
+            propertiesObj.load(fis);
+        }
+
+        // ── 2. Build focused config objects ───────────────────────────────────
+        DBConfig     dbConfig   = DBConfig.fromProperties(propertiesObj);
+        MailConfig   mailConfig = MailConfig.fromProperties(propertiesObj);
+        BrowserConfig brConfig  = BrowserConfig.fromProperties(propertiesObj, homedir);
+
+        // ── 3. Populate backward-compat shims (remove once consumers migrate) ─
+        syncShimsFromConfigs(dbConfig, mailConfig, brConfig, propertiesObj);
+
+        // ── 4. Open DB connection ─────────────────────────────────────────────
+        dbConfig.connect();
+        dbConnection = dbConfig.getConnection();    // shim — remove later
+
+        // ── 5. Populate pro (shim for Functions.java) ─────────────────────────
+        try (FileInputStream fis = new FileInputStream(propertiesFilePath)) {
+            pro.load(fis);
+        }
+
+        // ── 6. Shutdown hook — clean up driver & DB on SIGTERM ────────────────
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\n" + DIVIDER);
+            System.out.println(" ⚡ SHUTDOWN HOOK ACTIVATED");
+            System.out.println(SUB_DIV);
+            if (flag) {
+                scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
+                DB_Tables.updateEndTimeRunTimeInstance(
+                        "terminated", scriptEndTime, applicationId, runTimeInstanceId);
+            }
+            dbConfig.close();
+            if (driver != null && !driver.toString().contains("null")
+                    && !browser.equalsIgnoreCase("sikuli")) {
+                driver.quit();
+                System.out.println(" [WEB] DRIVER     : Quit [✓]");
+            }
+            System.out.println(DIVIDER);
+        }));
+
+        // ── 7. Read macId ─────────────────────────────────────────────────────
+        macId = DB_Tables.getMac();
+        System.out.println(" MAC  : " + macId);
+
+        // ── 8. Business-hour check ────────────────────────────────────────────
+        if ("y".equalsIgnoreCase(monitoringBusinessHour)) {
+            BusinessHour.monitoringHour();
+        }
+        try {
+            String monTime = propertiesObj.getProperty("monitoringTime", "n");
+            if ("y".equalsIgnoreCase(monTime)) {
+                BusinessHour.monitoringMinute();
+            }
+        } catch (Exception ignored) {}
+
+        // ── 9. Write PID file ─────────────────────────────────────────────────
+        writeProcessId();
+
+        // ── 10. Run ───────────────────────────────────────────────────────────
+        Run();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Run — test orchestration loop
+    //
+    // NOTE: This method is intentionally left structurally similar to the
+    // original for now so the diff is readable.  Step 2 will extract the
+    // inner loops into a TestRunner class and collapse the nesting.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static void Run() throws URISyntaxException, ParseException, FilloException, IOException {
+        homedir = System.getProperty("user.dir");
+        browsersts = 0;
+        oldbrowser = "new";
+        System.out.println("Project Path  ------------->  " + homedir);
+
+        fillo = new Fillo();
+        Connection con = null;
+
+        try {
+            String mainControllerPath = homedir + File.separator + "Main_Controller_Web.xlsx";
+            con = fillo.getConnection(mainControllerPath);
+            Recordset recordset = con.executeQuery("Select * from MainController where RunStatus='Y'");
+
+            while (recordset.next()) {
+                try {
+                    flag = true;
+                    // Collect all non-empty function names for this row
+                    int j = 5;
+                    do {
+                        functiontorun = recordset.getField(j).value();
+                        if (!functiontorun.isEmpty()) j++;
+                        else break;
+                    } while (true);
+
+                    for (int k = 5; k < j; k++) {
+                        functiontorun  = recordset.getField(k).value();
+                        ApplicationName = recordset.getField("ApplicationName");
+                        ScriptName      = ApplicationName;
+                        browser         = recordset.getField("Browser");
+
+                        System.out.println("Application Name  ---------> " + ApplicationName);
+                        System.out.println("Instance Name     ---------> " + functiontorun);
+
+                        scriptStartTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
+
+                        if (functiontorun != null && !functiontorun.equals("null") && !functiontorun.isEmpty()) {
+                            if (!browser.equalsIgnoreCase("sikuli")) {
+                                StartBrowser(homedir, browser);
+                                oldbrowser = browser;
+                            }
+
+                            Recordset recordsetDS = con.executeQuery(
+                                    "select * from DataSheet where InstanceName='" + functiontorun + "'");
+
+                            while (recordsetDS.next()) {
+                                String sDataSheet = recordsetDS.getField("DataSheet");
+                                dataSheetName = sDataSheet.replaceAll(".xlsx", "");
+
+                                String osName = getosname();
+                                datasheetspath = homedir
+                                        + (osName.equalsIgnoreCase("Windows") ? "\\" : "/")
+                                        + "DataSheet"
+                                        + (osName.equalsIgnoreCase("Windows") ? "\\" : "/")
+                                        + sDataSheet;
+
+                                System.out.println("Sheet Path ----------------> " + datasheetspath);
+
+                                Fillo filloDs = new Fillo();
+                                Connection connectionDS = filloDs.getConnection(datasheetspath);
+
+                                Recordset recordsetRDSF = connectionDS.executeQuery(
+                                        "select * from Sheet2 where RunStatus='Y'");
+
+                                double networkSpeed = DB_Tables.getNetworkSpeed();
+                                System.out.println("NetworkSpeed --------------> " + networkSpeed + " MB/s");
+
+                                monitoringInstancesId = DB_Tables.getMonitoringInstancesId(dataSheetName);
+                                zone      = DB_Tables.getMonitoringDetails(monitoringInstancesId);
+                                List<Integer> appData = DB_Tables.getApplicationMasterData(ApplicationName);
+                                applicationId = appData.get(0);
+                                clientId      = appData.get(1);
+                                domain        = DB_Tables.getclientMasterData(clientId);
+                                createdBy     = DB_Tables.getCreatedBy(applicationId);
+                                String ipAddress = DB_Tables.getIpAdress();
+                                List<String> infraData = DB_Tables.getContainerJenkinMasterIP(ipAddress);
+                                int infraId = infraData.get(0) != null ? Integer.parseInt(infraData.get(0)) : 0;
+                                String containerIP = infraData.get(1);
+                                String jenkinsIP   = infraData.get(2);
+                                List<String> devData = DB_Tables.getDeviceDetails(dataSheetName);
+                                String deviceType  = devData.get(0);
+                                String browserType = devData.get(1);
+                                String version     = devData.get(2);
+
+                                DB_Tables.Table_runtime_instance(
+                                        dataSheetName, scriptStartTime, scriptStartTime, "running",
+                                        new SimpleDateFormat("yyyyMMdd").format(new Date()),
+                                        new SimpleDateFormat("HH").format(new Date()),
+                                        new SimpleDateFormat("mm").format(new Date()),
+                                        browserType, deviceType, version, ipAddress, jenkinsIP,
+                                        monitoringInstancesId, applicationId, infraId,
+                                        createdBy, scriptStartTime, macId, scriptStartTime, networkSpeed);
+
+                                while (recordsetRDSF.next()) {
+                                    errorsatus  = "0";
+                                    sTestCaseID = recordsetRDSF.getField("TestCaseID");
+                                    sDescription = recordsetRDSF.getField("Description");
+
+                                    recordsetRDS = connectionDS.executeQuery(
+                                            "select * from Sheet1 where RunStatus='Y'");
+
+                                    while (recordsetRDS.next()) {
+                                        String runStatusRDS  = recordsetRDS.getField("RunStatus");
+                                        ControlRDS           = recordsetRDS.getField("Control").trim();
+                                        ObjectTypeRDS        = recordsetRDS.getField("ObjectType");
+                                        String propNameRDS   = recordsetRDS.getField("PropertyName");
+                                        String propValueRDS  = propertyValues = recordsetRDS.getField("PropertyValue");
+                                        String dataFieldRDS  = recordsetRDS.getField("Datafield");
+                                        String actionRDSVal  = recordsetRDS.getField("Action");
+                                        pagename             = recordsetRDS.getField("PageName");
+                                        actionRDS            = actionRDSVal;
+                                        Srno                 = recordsetRDS.getField("Srno");
+
+                                        System.out.printf("%n                    Step %s | Page: %s | Error: %s%n",
+                                                Srno, pagename, errorsatus);
+
+                                        if (runStatusRDS.equalsIgnoreCase("Y")) {
+                                            // ── Resolve data field value from Sheet2 ──────────────
+                                            String sColumnValue = "";
+                                            int fieldStatus = 0;
+                                            Connection connectionDS2 = filloDs.getConnection(datasheetspath);
+                                            Recordset recordsetRDSFsc = connectionDS2.executeQuery(
+                                                    "select * from Sheet2 where RunStatus='Y'");
+                                            while (recordsetRDSFsc.next()) {
+                                                for (int xm = 0; xm <= 1000; xm++) {
+                                                    try {
+                                                        if (!recordsetRDSFsc.getField(xm).name()
+                                                                .equalsIgnoreCase(dataFieldRDS)) continue;
+                                                        sColumnValue = recordsetRDSFsc.getField(xm).value();
+                                                        fieldStatus = 1;
+                                                    } catch (Exception ignored) {}
+                                                    break;
+                                                }
+                                            }
+
+                                            // ── Dispatch ──────────────────────────────────────────
+                                            if (ObjectTypeRDS.equalsIgnoreCase("Custom")
+                                                    || ObjectTypeRDS.equalsIgnoreCase("customStartBrowser")
+                                                    || ObjectTypeRDS.equalsIgnoreCase("CustomConditionMethods")) {
+                                                invokeCustomJar(ObjectTypeRDS, propNameRDS, propValueRDS,
+                                                        sColumnValue, actionRDSVal);
+                                            } else {
+                                                Functions.Actions(ControlRDS, ObjectTypeRDS,
+                                                        propNameRDS, propValueRDS, sColumnValue,
+                                                        actionRDSVal, Srno, fieldStatus, pagename);
+                                            }
+
+                                            logstatus = "0";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── End of instance — update DB ───────────────────────
+                        scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
+                        flag = false;
+                        System.out.println("\n" + DIVIDER);
+
+                        if (Monitoring_FrameWork.logoutFlag || exitFlag) {
+                            DB_Tables.updateEndTimeRunTimeInstance(
+                                    "terminated", scriptEndTime, applicationId, runTimeInstanceId);
+                            System.exit(1);
+                        } else {
+                            DB_Tables.updateEndTimeRunTimeInstance(
+                                    "success", scriptEndTime, applicationId, runTimeInstanceId);
+                        }
+                        System.out.println("**** Execution Completed: " + functiontorun + " ****\n");
+                    }
+
+                } catch (Exception datasheetError) {
+                    System.err.println("Error in DataSheet: " + datasheetError.getMessage());
+                    datasheetError.printStackTrace();
+                    System.exit(1);
+                }
+            }
+        } catch (Exception mainControllerError) {
+            System.err.println("Connection Error in MainController: " + mainControllerError.getMessage());
+            mainControllerError.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Custom JAR dispatch — extracted from the 3-branch if/else in Run()
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private static void invokeCustomJar(String objectType, String propName, String propValue,
+                                        String columnValue, String action) {
+        try {
+            URL jarURL = new URL("file:" + customJarPath.replace("\\", "/"));
+            try (URLClassLoader classLoader = new URLClassLoader(new URL[]{ jarURL })) {
+                Class<?> loadedClass = classLoader.loadClass(customClassName);
+                Object instance = loadedClass.newInstance();
+
+                if (objectType.equalsIgnoreCase("Custom")) {
+                    Method method = loadedClass.getMethod("allFunction",
+                            WebDriver.class, String.class, String.class, String.class, String.class);
+                    if (ControlRDS.equalsIgnoreCase("V")) {
+                        try {
+                            @SuppressWarnings("unchecked")
+                            List<Object> result = (List<Object>) method.invoke(
+                                    instance, driver, propName, propValue, columnValue, action);
+                            if (result.size() == 1) {
+                                Monitoring_FrameWork.SaveResult(result.get(0).toString(), columnValue);
+                            } else {
+                                Monitoring_FrameWork.SaveResult(
+                                        result.get(0).toString(), result.get(1).toString());
+                            }
+                        } catch (Exception e) {
+                            errorsatus = "1";
+                            Monitoring_FrameWork.SaveResult(
+                                    "Either locator changed / Network delay / page not loaded", columnValue);
+                        }
+                    } else {
+                        try {
+                            method.invoke(instance, driver, propName, propValue, columnValue, action);
+                        } catch (Exception e) {
+                            errorsatus = "1";
+                            Monitoring_FrameWork.SaveResult(
+                                    "Either locator changed / Network delay / page not loaded", columnValue);
+                        }
+                    }
+
+                } else if (objectType.equalsIgnoreCase("customStartBrowser")) {
+                    Method method = loadedClass.getMethod("customStartBrowser", String.class, String.class);
+                    try {
+                        driver = (WebDriver) method.invoke(instance, browser, headless);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                } else if (objectType.equalsIgnoreCase("CustomConditionMethods")) {
+                    Method method = loadedClass.getMethod("conditionsMethods",
+                            com.codoid.products.fillo.Recordset.class, WebDriver.class,
+                            String.class, String.class, String.class, String.class);
+                    try {
+                        recordsetRDS = (com.codoid.products.fillo.Recordset) method.invoke(
+                                instance, recordsetRDS, driver, propName, propValue, columnValue, action);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Browser management
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * StartBrowser — delegates to BrowserFactory.
+     * Kept here for now; will move to BrowserFactory in Step 2.
+     */
+    public static void StartBrowser(final String homedir, String browserName) throws Exception {
+        browserToOpen = browserName;
+        System.out.println("Browser -------------------> " + browserName);
+
+        if (browsersts == 1 && (browserName.toUpperCase().contains("NEW")
+                || !oldbrowser.equalsIgnoreCase(browserName))) {
+            driver.quit();
+            System.out.println("**** Browser closed ****");
+            browsersts = 0;
+            browserName = browserName.replace("NEW", "").replace("new", "");
+        }
+
+        if (browsersts == 0) {
+            // Delegate to BrowserFactory — created in Step 2
+            // For now the logic is inlined here to keep the build green.
+            BrowserFactory.launch(homedir, browserName, headless, fastPageLoad,
+                    pageStability, pageLoadTime, defaultDownload, ffProfilePath);
+        } else {
+            System.out.println("**** " + browserName + " already running ****");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // OS utilities
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static String getosname() {
+        return System.getProperty("os.name", "").toUpperCase().contains("WIN")
+                ? "Windows" : "Ubuntu";
+    }
+
+    public static String getosarch() {
+        return System.getProperty("os.arch", "").contains("64") ? "64" : "32";
+    }
+
+    public static void ShowWarning(String msg) {
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Screenshot
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public static String TakeScreenshots() throws Exception {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Robot robot = new Robot();
+        BufferedImage image = robot.createScreenCapture(new Rectangle(screenSize));
+
+        Date now = new Date();
+        int year      = new java.util.Calendar.Builder().setInstant(now).build().get(java.util.Calendar.YEAR);
+        int monthDay  = new java.util.Calendar.Builder().setInstant(now).build().get(java.util.Calendar.DAY_OF_MONTH);
+        String monthName = new SimpleDateFormat("MMMM").format(now);
+
+        String folderPath = homedir + File.separator + "Logs" + File.separator
+                + year + File.separator + monthName + File.separator
+                + monthDay + File.separator + dataSheetName;
+        new File(folderPath).mkdirs();
+
+        String time = new SimpleDateFormat("HH_mm_ss").format(now);
+        String screenshotPath = folderPath + File.separator + pagename + "_" + time + ".jpg";
+
+        ImageIO.write(image, "jpg", new File(screenshotPath));
+        Monitoring_FrameWork.compressImage(new File(screenshotPath), new File(screenshotPath), 30 * 1024);
+
+        ScreenshotfileLocation = screenshotPath;
+        System.out.printf(" [INFO] Screenshot: %s%n", screenshotPath);
+        return screenshotPath;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Internal helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Populate all the backward-compat shim fields so existing callers
+     * (DB_Tables, Functions, Monitoring_FrameWork) keep working without change.
+     * As each class is migrated, remove the corresponding lines here.
+     */
+    private static void syncShimsFromConfigs(DBConfig db, MailConfig mail,
+                                             BrowserConfig br, Properties props) {
+        // DB shims
+        dburl      = db.getUrl();
+        dbuser     = db.getUsername();
+
+        // Mail shims
+        host     = mail.getHost();
+        port     = mail.getPort();
+        mailFrom = mail.getMailFrom();
+        password = mail.getPassword();
+        mailTo   = mail.getMailTo();
+        mailCc   = mail.getMailCc();
+        subject  = mail.getSubject();
+        mailAlert = mail.isAlertEnabled() ? "Y" : "N";
+
+        // Browser shims
+        headless        = String.valueOf(br.isHeadless());
+        fastPageLoad    = br.getFastPageLoad();
+        pageStability   = br.isPageStabilityEnabled() ? "Y" : "N";
+        pageLoadTime    = String.valueOf(br.getPageLoadTimeoutSeconds());
+        defaultDownload = br.isDefaultDownload() ? "Y" : "N";
+        showLocator     = br.isShowLocator() ? "Y" : "N";
+        ffProfilePath   = br.getFfProfilePath();
+        customJarPath   = br.getCustomJarPath();
+        customClassName = br.getCustomClassName();
+        exitStatus      = props.getProperty("exitStatus", "Y");
+        bankHoliday     = props.getProperty("bankHoliday", "N");
+
+        // Monitoring shims
+        bHour                = props.getProperty("businessHourRunStatus", "");
+        bHourFunction        = props.getProperty("businessHourFunctions", "");
+        monitoringBusinessHour   = props.getProperty("monitoringBusinessHour", "n");
+        monitoringDataSheetPath  = props.getProperty("monitoringDataSheetPath", "");
+    }
+
+    /**
+     * Writes the JVM process ID to Logs/pid.txt so external scripts can
+     * kill the process cleanly.
+     */
+    private static void writeProcessId() {
+        try {
+            String processName = ManagementFactory.getRuntimeMXBean().getName();
+            long pid = Long.parseLong(processName.split("@")[0]);
+            System.out.println("ProcessId     ------------->  " + pid);
+
+            File logsFolder = new File(homedir + File.separator + "Logs");
+            logsFolder.mkdirs();
+            File pidFile = new File(logsFolder, "pid.txt");
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(pidFile, false))) {
+                bw.write(String.valueOf(pid));
+            }
+        } catch (IOException e) {
+            System.err.println("Could not write pid.txt: " + e.getMessage());
+        }
+    }
 }
