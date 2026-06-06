@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.function.Function;
 
@@ -23,6 +26,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  * switch as a side effect and return null — same behaviour as before.
  */
 public class ElementLocator {
+
+    private static final Logger log = LoggerFactory.getLogger(ElementLocator.class);
+
 
     private ElementLocator() {}
 
@@ -88,28 +94,28 @@ public class ElementLocator {
                 // ── Frame-switch types — side effect only, return null ────────
                 case "FID": {
                     driver.switchTo().frame(driver.findElement(By.id(locatorValue)));
-                    System.out.println("[Locator] Switched to frame by ID: " + locatorValue);
+                    log.info("[Locator] Switched to frame by ID: " + locatorValue);
                     return null;
                 }
                 case "FNAME": {
                     driver.switchTo().frame(driver.findElement(By.name(locatorValue)));
-                    System.out.println("[Locator] Switched to frame by Name: " + locatorValue);
+                    log.info("[Locator] Switched to frame by Name: " + locatorValue);
                     return null;
                 }
                 case "FXPATH": {
                     driver.switchTo().frame(driver.findElement(By.xpath(locatorValue)));
-                    System.out.println("[Locator] Switched to frame by XPath: " + locatorValue);
+                    log.info("[Locator] Switched to frame by XPath: " + locatorValue);
                     return null;
                 }
                 case "INDEX": {
                     int index = Integer.parseInt(locatorValue.trim());
                     driver.switchTo().frame(index);
-                    System.out.println("[Locator] Switched to frame by index: " + index);
+                    log.info("[Locator] Switched to frame by index: " + index);
                     return null;
                 }
                 case "PARTENTFRAME": {
                     driver.switchTo().parentFrame();
-                    System.out.println("[Locator] Switched to parent frame");
+                    log.info("[Locator] Switched to parent frame");
                     return null;
                 }
                 case "XPATHS": {
@@ -117,7 +123,7 @@ public class ElementLocator {
                     return null;
                 }
                 default: {
-                    System.out.println("[Locator] Unknown locator type: " + type);
+                    log.info("[Locator] Unknown locator type: " + type);
                     return null;
                 }
             }
@@ -130,7 +136,7 @@ public class ElementLocator {
             } catch (Exception ex) {
                 Framework.errorMessage = "Unknown error";
             }
-            System.err.println("[Locator] Failed to find element [" + type + "=" + locatorValue + "]: " + e.getMessage());
+            log.error("[Locator] Failed to find element [" + type + "=" + locatorValue + "]: " + e.getMessage());
             Monitoring_FrameWork.SaveResult("Locator not found", " ");
             return null;
         }

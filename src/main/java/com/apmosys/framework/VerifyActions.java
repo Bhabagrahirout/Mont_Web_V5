@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,6 +29,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  */
 public class VerifyActions {
 
+    private static final Logger log = LoggerFactory.getLogger(VerifyActions.class);
+
+
     private VerifyActions() {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -44,12 +50,12 @@ public class VerifyActions {
             new WebDriverWait(driver, Duration.ofSeconds(Framework.defaultwaittime))
                     .until((Function) ExpectedConditions.visibilityOfElementLocated(by));
             String actual = driver.findElement(by).getText().trim();
-            System.out.println("[VerifyActions] Visible. Text: " + actual);
+            log.info("[VerifyActions] Visible. Text: " + actual);
             Monitoring_FrameWork.SaveResult(actual, expectedValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
             Framework.errorpagename = pageName;
-            System.err.println("[VerifyActions] Element not visible: " + e.getMessage());
+            log.error("[VerifyActions] Element not visible: " + e.getMessage());
             try { Monitoring_FrameWork.SaveResult("Element Not Visible", expectedValue); }
             catch (Exception ignored) {}
         }
@@ -66,11 +72,11 @@ public class VerifyActions {
             By by = ElementLocator.toBy(locatorType, locatorValue);
             boolean invisible = new WebDriverWait(driver, Duration.ofSeconds(Framework.defaultwaittime))
                     .until((Function) ExpectedConditions.invisibilityOfElementLocated(by));
-            System.out.println("[VerifyActions] Invisible: " + invisible);
+            log.info("[VerifyActions] Invisible: " + invisible);
             Monitoring_FrameWork.SaveResult(invisible ? "Not Visible" : "Still Visible", expectedValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] Invisibility check error: " + e.getMessage());
+            log.error("[VerifyActions] Invisibility check error: " + e.getMessage());
         }
     }
 
@@ -88,7 +94,7 @@ public class VerifyActions {
             Monitoring_FrameWork.SaveResult("Element Present", expectedValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] Element not present: " + e.getMessage());
+            log.error("[VerifyActions] Element not present: " + e.getMessage());
             try { Monitoring_FrameWork.SaveResult("Element Not Present", expectedValue); }
             catch (Exception ignored) {}
         }
@@ -102,11 +108,11 @@ public class VerifyActions {
                                       String expectedValue, String pageName) {
         try {
             boolean enabled = element.isEnabled();
-            System.out.println("[VerifyActions] Enabled: " + enabled);
+            log.info("[VerifyActions] Enabled: " + enabled);
             Monitoring_FrameWork.SaveResult(enabled ? "Enabled" : "Disabled", expectedValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] Enability check error: " + e.getMessage());
+            log.error("[VerifyActions] Enability check error: " + e.getMessage());
         }
     }
 
@@ -125,12 +131,12 @@ public class VerifyActions {
             if (text.isBlank()) {
                 text = element.getAttribute("value");
             }
-            System.out.println("[VerifyActions] Text: " + text);
+            log.info("[VerifyActions] Text: " + text);
             Monitoring_FrameWork.SaveResult(text, expectedValue);
             return text;
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] getText error: " + e.getMessage());
+            log.error("[VerifyActions] getText error: " + e.getMessage());
             return "";
         }
     }
@@ -143,7 +149,7 @@ public class VerifyActions {
                                  String pageName) {
         try {
             String currentUrl = driver.getCurrentUrl();
-            System.out.println("[VerifyActions] URL: " + currentUrl);
+            log.info("[VerifyActions] URL: " + currentUrl);
             if (!currentUrl.toLowerCase().contains(expectedUrlFragment.toLowerCase())) {
                 Framework.errorsatus = "1";
                 System.out.println("[VerifyActions] URL mismatch. Expected fragment: "
@@ -152,7 +158,7 @@ public class VerifyActions {
             Monitoring_FrameWork.SaveResult(currentUrl, expectedUrlFragment);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] URL verify error: " + e.getMessage());
+            log.error("[VerifyActions] URL verify error: " + e.getMessage());
         }
     }
 
@@ -165,12 +171,12 @@ public class VerifyActions {
         try {
             Object result = ((JavascriptExecutor) driver).executeScript(script);
             String value = result != null ? result.toString().trim() : "";
-            System.out.println("[VerifyActions] JS result: " + value);
+            log.info("[VerifyActions] JS result: " + value);
             Monitoring_FrameWork.SaveResult(value, expectedValue);
             return value;
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] JS execute error: " + e.getMessage());
+            log.error("[VerifyActions] JS execute error: " + e.getMessage());
             return "";
         }
     }
@@ -187,7 +193,7 @@ public class VerifyActions {
     public static boolean verifyDownloadedFile(String downloadFolder,
                                                String fileNamePattern,
                                                int maxWaitSecs) {
-        System.out.println("[VerifyActions] Waiting for download: " + fileNamePattern);
+        log.info("[VerifyActions] Waiting for download: " + fileNamePattern);
         for (int i = 0; i < maxWaitSecs; i++) {
             File dir = new File(downloadFolder);
             File[] files = dir.listFiles();
@@ -196,14 +202,14 @@ public class VerifyActions {
                     if (f.getName().toLowerCase().contains(fileNamePattern.toLowerCase())
                             && !f.getName().endsWith(".crdownload")
                             && !f.getName().endsWith(".tmp")) {
-                        System.out.println("[VerifyActions] File found: " + f.getName());
+                        log.info("[VerifyActions] File found: " + f.getName());
                         return true;
                     }
                 }
             }
             WaitActions.sleep(1);
         }
-        System.out.println("[VerifyActions] File NOT found: " + fileNamePattern);
+        log.info("[VerifyActions] File NOT found: " + fileNamePattern);
         Framework.errorsatus = "1";
         return false;
     }
@@ -230,7 +236,7 @@ public class VerifyActions {
             elapsed++;
         }
         Framework.errorsatus = "1";
-        System.err.println("[VerifyActions] Element still not visible after " + retrySecs + "s");
+        log.error("[VerifyActions] Element still not visible after " + retrySecs + "s");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -246,13 +252,13 @@ public class VerifyActions {
         try {
             String rawText = element.getText().replaceAll("[^0-9.]", "");
             double balance = Double.parseDouble(rawText);
-            System.out.println("[VerifyActions] Balance: " + balance + " | Threshold: " + threshold);
+            log.info("[VerifyActions] Balance: " + balance + " | Threshold: " + threshold);
             String result = balance >= threshold ? "Above threshold" : "Below threshold";
             Monitoring_FrameWork.SaveResult(result + " (" + balance + ")", expectedValue);
             if (balance < threshold) Framework.errorsatus = "1";
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] Balance verify error: " + e.getMessage());
+            log.error("[VerifyActions] Balance verify error: " + e.getMessage());
         }
     }
 
@@ -266,11 +272,11 @@ public class VerifyActions {
             int width  = frame.getSize().getWidth();
             int height = frame.getSize().getHeight();
             String size = width + "x" + height;
-            System.out.println("[VerifyActions] Frame size: " + size);
+            log.info("[VerifyActions] Frame size: " + size);
             Monitoring_FrameWork.SaveResult(size, expectedValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[VerifyActions] Frame size error: " + e.getMessage());
+            log.error("[VerifyActions] Frame size error: " + e.getMessage());
         }
     }
 }

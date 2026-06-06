@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +22,9 @@ import org.openqa.selenium.support.ui.Select;
  */
 public class DropdownDateActions {
 
+    private static final Logger log = LoggerFactory.getLogger(DropdownDateActions.class);
+
+
     private DropdownDateActions() {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -32,10 +38,10 @@ public class DropdownDateActions {
     public static void selectByText(WebElement dropdown, String visibleText) {
         try {
             new Select(dropdown).selectByVisibleText(visibleText.trim());
-            System.out.println("[DropdownDateActions] Selected by text: " + visibleText);
+            log.info("[DropdownDateActions] Selected by text: " + visibleText);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] Select by text failed: " + e.getMessage());
+            log.error("[DropdownDateActions] Select by text failed: " + e.getMessage());
         }
     }
 
@@ -46,10 +52,10 @@ public class DropdownDateActions {
     public static void selectByIndex(WebElement dropdown, int index) {
         try {
             new Select(dropdown).selectByIndex(index);
-            System.out.println("[DropdownDateActions] Selected index: " + index);
+            log.info("[DropdownDateActions] Selected index: " + index);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] Select by index failed: " + e.getMessage());
+            log.error("[DropdownDateActions] Select by index failed: " + e.getMessage());
         }
     }
 
@@ -60,10 +66,10 @@ public class DropdownDateActions {
     public static void selectByValue(WebElement dropdown, String value) {
         try {
             new Select(dropdown).selectByValue(value.trim());
-            System.out.println("[DropdownDateActions] Selected by value: " + value);
+            log.info("[DropdownDateActions] Selected by value: " + value);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] Select by value failed: " + e.getMessage());
+            log.error("[DropdownDateActions] Select by value failed: " + e.getMessage());
         }
     }
 
@@ -78,14 +84,14 @@ public class DropdownDateActions {
             boolean found = select.getOptions().stream()
                     .anyMatch(o -> o.getText().trim().equalsIgnoreCase(expectedText.trim()));
             if (!found) {
-                System.out.println("[DropdownDateActions] Option not found: " + expectedText);
+                log.info("[DropdownDateActions] Option not found: " + expectedText);
                 Framework.errorsatus = "1";
                 return;
             }
             select.selectByVisibleText(selectValue.trim());
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] validateAndSelect error: " + e.getMessage());
+            log.error("[DropdownDateActions] validateAndSelect error: " + e.getMessage());
         }
     }
 
@@ -136,17 +142,17 @@ public class DropdownDateActions {
         try {
             String[] parts = dob.split(separator.equals(".") ? "\\." : separator);
             if (parts.length < 3) {
-                System.err.println("[DropdownDateActions] Invalid DOB format: " + dob);
+                log.error("[DropdownDateActions] Invalid DOB format: " + dob);
                 Framework.errorsatus = "1";
                 return;
             }
             if (dayEl   != null) { dayEl.clear();   dayEl.sendKeys(parts[0]); }
             if (monthEl != null) { monthEl.clear(); monthEl.sendKeys(parts[1]); }
             if (yearEl  != null) { yearEl.clear();  yearEl.sendKeys(parts[2]); }
-            System.out.println("[DropdownDateActions] DOB sent: " + dob);
+            log.info("[DropdownDateActions] DOB sent: " + dob);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] sendDob error: " + e.getMessage());
+            log.error("[DropdownDateActions] sendDob error: " + e.getMessage());
         }
     }
 
@@ -158,10 +164,10 @@ public class DropdownDateActions {
         try {
             dateField.clear();
             dateField.sendKeys(dateValue);
-            System.out.println("[DropdownDateActions] Date sent: " + dateValue);
+            log.info("[DropdownDateActions] Date sent: " + dateValue);
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[DropdownDateActions] sendDate error: " + e.getMessage());
+            log.error("[DropdownDateActions] sendDate error: " + e.getMessage());
         }
     }
 

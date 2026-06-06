@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
@@ -19,6 +22,9 @@ import java.util.function.Function;
  */
 public class AlertActions {
 
+    private static final Logger log = LoggerFactory.getLogger(AlertActions.class);
+
+
     private AlertActions() {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -28,10 +34,10 @@ public class AlertActions {
     public static void accept(WebDriver driver) {
         try {
             Alert alert = WaitActions.forAlert(driver, 10);
-            System.out.println("[AlertActions] Alert text: " + alert.getText());
+            log.info("[AlertActions] Alert text: " + alert.getText());
             alert.accept();
         } catch (Exception e) {
-            System.out.println("[AlertActions] No alert present to accept");
+            log.info("[AlertActions] No alert present to accept");
         }
     }
 
@@ -40,7 +46,7 @@ public class AlertActions {
             Alert alert = WaitActions.forAlert(driver, 10);
             alert.dismiss();
         } catch (Exception e) {
-            System.out.println("[AlertActions] No alert present to dismiss");
+            log.info("[AlertActions] No alert present to dismiss");
         }
     }
 
@@ -72,15 +78,15 @@ public class AlertActions {
             Alert alert = WaitActions.forAlert(driver, 10);
             String actual = alert.getText().trim();
             alert.accept();
-            System.out.println("[AlertActions] Alert text: " + actual);
+            log.info("[AlertActions] Alert text: " + actual);
             if (!expectedText.isBlank() && !actual.equalsIgnoreCase(expectedText.trim())) {
-                System.out.println("[AlertActions] MISMATCH — expected: " + expectedText);
+                log.info("[AlertActions] MISMATCH — expected: " + expectedText);
                 Framework.errorsatus = "1";
             }
             return actual;
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[AlertActions] Alert not found: " + e.getMessage());
+            log.error("[AlertActions] Alert not found: " + e.getMessage());
             return "";
         }
     }
@@ -110,7 +116,7 @@ public class AlertActions {
                                               java.util.Map<String, String> answersMap) {
         try {
             String questionText = questionElement.getText().toLowerCase().trim();
-            System.out.println("[AlertActions] Security question: " + questionText);
+            log.info("[AlertActions] Security question: " + questionText);
 
             String answer = answersMap.entrySet().stream()
                     .filter(e -> questionText.contains(e.getKey().toLowerCase()))
@@ -119,16 +125,16 @@ public class AlertActions {
                     .orElse("");
 
             if (answer.isBlank()) {
-                System.out.println("[AlertActions] No matching answer for: " + questionText);
+                log.info("[AlertActions] No matching answer for: " + questionText);
                 Framework.errorsatus = "1";
             } else {
                 answerElement.clear();
                 answerElement.sendKeys(answer);
-                System.out.println("[AlertActions] Answered security question");
+                log.info("[AlertActions] Answered security question");
             }
         } catch (Exception e) {
             Framework.errorsatus = "1";
-            System.err.println("[AlertActions] Security question error: " + e.getMessage());
+            log.error("[AlertActions] Security question error: " + e.getMessage());
         }
     }
 
@@ -145,7 +151,7 @@ public class AlertActions {
             }
             driver.switchTo().window(parentHandle);
         } catch (Exception e) {
-            System.err.println("[AlertActions] Popup close error: " + e.getMessage());
+            log.error("[AlertActions] Popup close error: " + e.getMessage());
         }
     }
 

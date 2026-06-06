@@ -1,6 +1,9 @@
 
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -99,6 +102,7 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 
 public class Functions extends Framework {
+    private static final Logger log = LoggerFactory.getLogger(Functions.class);
 	static int deftime;
 	public static Properties pro;
 	public static String path2;
@@ -181,9 +185,9 @@ public class Functions extends Framework {
 			}
 			case "PARTENTFRAME": {
 				if (objectTypeRDS.equalsIgnoreCase("FRAME")) {
-					System.out.println("We are in parent frame");
+					log.info("We are in parent frame");
 					Framework.driver.switchTo().parentFrame();
-					System.out.println("switch to..............................." + propertyValueRDS);
+					log.info("switch to..............................." + propertyValueRDS);
 					return WebElementVal;
 				}
 				return WebElementVal;
@@ -202,7 +206,7 @@ public class Functions extends Framework {
 				wait.until((Function) ExpectedConditions.visibilityOfElementLocated(By.id(propertyValueRDS)));
 				wait.until((Function) ExpectedConditions.presenceOfElementLocated(By.id(propertyValueRDS)));
 				if (Framework.driver.findElement(By.id(propertyValueRDS)).isDisplayed()) {
-					System.out.println(propertyValueRDS);
+					log.info(propertyValueRDS);
 					WebElementVal = Framework.driver.findElement(By.id(propertyValueRDS));
 					return WebElementVal;
 				}
@@ -219,7 +223,7 @@ public class Functions extends Framework {
 			case "FID": {
 				if (objectTypeRDS.equalsIgnoreCase("FRAME")) {
 					Framework.driver.switchTo().frame(Framework.driver.findElement(By.id(propertyValueRDS)));
-					System.out.println("switch to..............................." + propertyValueRDS);
+					log.info("switch to..............................." + propertyValueRDS);
 					return WebElementVal;
 				}
 				return WebElementVal;
@@ -227,7 +231,7 @@ public class Functions extends Framework {
 			case "NAME": {
 				wait.until((Function) ExpectedConditions.presenceOfElementLocated(By.name(propertyValueRDS)));
 				if (Framework.driver.findElement(By.name(propertyValueRDS)).isDisplayed()) {
-					System.out.println(propertyValueRDS);
+					log.info(propertyValueRDS);
 					WebElementVal = Framework.driver.findElement(By.name(propertyValueRDS));
 					return WebElementVal;
 				}
@@ -236,7 +240,7 @@ public class Functions extends Framework {
 			case "FNAME": {
 				if (objectTypeRDS.equalsIgnoreCase("FRAME")) {
 					Framework.driver.switchTo().frame(Framework.driver.findElement(By.name(propertyValueRDS)));
-					System.out.println("switch to..............................." + propertyValueRDS);
+					log.info("switch to..............................." + propertyValueRDS);
 					return WebElementVal;
 				}
 				return WebElementVal;
@@ -275,7 +279,7 @@ public class Functions extends Framework {
 			case "FXPATH": {
 				if (objectTypeRDS.equalsIgnoreCase("FRAME")) {
 					Framework.driver.switchTo().frame(Framework.driver.findElement(By.xpath(propertyValueRDS)));
-					System.out.println("switch to..............................." + propertyValueRDS);
+					log.info("switch to..............................." + propertyValueRDS);
 					return WebElementVal;
 				}
 				return WebElementVal;
@@ -303,7 +307,7 @@ public class Functions extends Framework {
 	public static void Waitforcondition(String propertyNameRDS, final String propertyValueRDS, final String Condtion,
 			final String srNo, final String pagename) throws Exception {
 		try {
-			System.out.println("Waiting for condition...............");
+			log.info("Waiting for condition...............");
 			final String[] Condtionsplit = Condtion.split("\\(");
 			final String Condtionval1 = Condtionsplit[1];
 			final String[] Condtionsplit2 = Condtionval1.split("\\)");
@@ -342,24 +346,24 @@ public class Functions extends Framework {
 				break;
 			}
 			}
-			System.out.println("Locator is -----> " + loc + "  :" + propertyNameRDS + ":");
+			log.info("Locator is -----> " + loc + "  :" + propertyNameRDS + ":");
 			if (loc != null) {
 				if (Condtion.contains("invisibilityOfElement")) {
-					System.out.println("waiting for invisibilityOfElement ------->" + new Date().toString());
+					log.info("waiting for invisibilityOfElement ------->" + new Date().toString());
 					wait.until((Function) ExpectedConditions.invisibilityOfElementLocated(loc));
-					System.out.println("waiting for invisibilityOfElement ------->" + new Date().toString());
+					log.info("waiting for invisibilityOfElement ------->" + new Date().toString());
 				} else if (Condtion.contains("visibilityOfElement")) {
-					System.out.println("waiting for visibilityOfElement ------->" + new Date().toString());
+					log.info("waiting for visibilityOfElement ------->" + new Date().toString());
 					wait.until((Function) ExpectedConditions.visibilityOfElementLocated(loc));
-					System.out.println("waiting for visibilityOfElement ------->" + new Date().toString());
+					log.info("waiting for visibilityOfElement ------->" + new Date().toString());
 				} else if (Condtion.contains("presenceOfElement")) {
-					System.out.println("waiting for Presence ------->" + new Date().toString());
+					log.info("waiting for Presence ------->" + new Date().toString());
 					wait.until((Function) ExpectedConditions.presenceOfElementLocated(loc));
-					System.out.println("waiting End for Presence ------->" + new Date().toString());
+					log.info("waiting End for Presence ------->" + new Date().toString());
 				} else if (Condtion.contains("elementToBeClickable")) {
-					System.out.println("waiting for elementToBeClickable ------->" + new Date().toString());
+					log.info("waiting for elementToBeClickable ------->" + new Date().toString());
 					wait.until((Function) ExpectedConditions.elementToBeClickable(loc));
-					System.out.println("waiting for elementToBeClickable ------->" + new Date().toString());
+					log.info("waiting for elementToBeClickable ------->" + new Date().toString());
 				}
 			} else if (Condtion.contains("alertIsPresent")) {
 				wait.until((Function) ExpectedConditions.alertIsPresent());

@@ -1,0 +1,61 @@
+<configuration>
+
+    <!--
+        logback.xml — Mont_Web_V5 logging configuration
+        Step 3 of the framework refactor.
+
+        LOG LEVELS:
+          ERROR  — test failures, exceptions, locator not found
+          WARN   — retries, slow waits, degraded conditions
+          INFO   — normal step execution, navigation, test progress
+          DEBUG  — element resolution, wait conditions (dev only)
+
+        OUTPUT:
+          Console  — INFO and above, colored by level
+          File     — DEBUG and above, rolling daily, kept 30 days
+    -->
+
+    <property name="LOG_DIR"     value="${user.dir}/Logs"/>
+    <property name="LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%-5level] [%thread] %logger{20} — %msg%n"/>
+
+    <!-- ── Console appender ───────────────────────────────────────────── -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d{HH:mm:ss} %highlight(%-5level) %cyan(%logger{20}) — %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Rolling file appender ──────────────────────────────────────── -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/framework.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Roll daily, keep 30 days, max total size 1GB -->
+            <fileNamePattern>${LOG_DIR}/framework.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Silence noisy third-party libraries ────────────────────────── -->
+    <logger name="org.openqa.selenium"   level="WARN"/>
+    <logger name="io.netty"              level="WARN"/>
+    <logger name="org.apache"            level="WARN"/>
+    <logger name="io.restassured"        level="WARN"/>
+    <logger name="com.codoid"            level="WARN"/>
+
+    <!-- ── Framework root logger ──────────────────────────────────────── -->
+    <logger name="com.apmosys" level="DEBUG"/>
+
+    <!-- ── Root (catches everything else at INFO) ─────────────────────── -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

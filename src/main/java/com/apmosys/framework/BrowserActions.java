@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -29,6 +32,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  */
 public class BrowserActions {
 
+    private static final Logger log = LoggerFactory.getLogger(BrowserActions.class);
+
+
     private BrowserActions() {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -36,7 +42,7 @@ public class BrowserActions {
     // ─────────────────────────────────────────────────────────────────────────
 
     public static void browseUrl(WebDriver driver, String url) {
-        System.out.println("[BrowserActions] Navigating to: " + url);
+        log.info("[BrowserActions] Navigating to: " + url);
         driver.get(url);
     }
 

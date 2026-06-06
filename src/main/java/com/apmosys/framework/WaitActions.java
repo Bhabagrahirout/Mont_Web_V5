@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.function.Function;
 
@@ -26,6 +29,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  *   WaitActions.forCondition(driver, "XPATH", "//span", "visibilityOfElement(30)");
  */
 public class WaitActions {
+
+    private static final Logger log = LoggerFactory.getLogger(WaitActions.class);
+
 
     private WaitActions() {}
 
@@ -181,7 +187,7 @@ public class WaitActions {
                                     String locatorValue, String condition,
                                     String srNo, String pageName) {
         try {
-            System.out.println("[WaitActions] Waiting for condition: " + condition);
+            log.info("[WaitActions] Waiting for condition: " + condition);
             long waitSecs = parseTimeout(condition);
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(waitSecs));
             By locator = ElementLocator.toBy(locatorType, locatorValue);
@@ -197,13 +203,13 @@ public class WaitActions {
             } else if (condition.contains("alertIsPresent")) {
                 wait.until((Function) ExpectedConditions.alertIsPresent());
             } else {
-                System.out.println("[WaitActions] Unknown condition: " + condition);
+                log.info("[WaitActions] Unknown condition: " + condition);
             }
-            System.out.println("[WaitActions] Condition met: " + condition);
+            log.info("[WaitActions] Condition met: " + condition);
         } catch (Exception e) {
             Framework.errorsatus = "1";
             Framework.errorpagename = pageName;
-            System.err.println("[WaitActions] Condition not met: " + e.getMessage());
+            log.error("[WaitActions] Condition not met: " + e.getMessage());
             try {
                 Monitoring_FrameWork.SaveResult("Locator not found", " ");
             } catch (Exception ex) {

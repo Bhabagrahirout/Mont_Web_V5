@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -66,6 +69,7 @@ import com.codoid.products.fillo.Recordset;
  * ─────────────────────────────────────────────────────────────────────────────
  */
 public class Framework {
+    private static final Logger log = LoggerFactory.getLogger(Framework.class);
 
     // ── Display dividers (purely cosmetic, OK to remain static) ──────────────
     public static final String DIVIDER  = "═".repeat(60);
@@ -315,9 +319,9 @@ public class Framework {
 
         // ── 6. Shutdown hook — clean up driver & DB on SIGTERM ────────────────
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\n" + DIVIDER);
-            System.out.println(" ⚡ SHUTDOWN HOOK ACTIVATED");
-            System.out.println(SUB_DIV);
+            log.info("\n" + DIVIDER);
+            log.info(" ⚡ SHUTDOWN HOOK ACTIVATED");
+            log.info(SUB_DIV);
             if (flag) {
                 scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
                 DB_Tables.updateEndTimeRunTimeInstance(
@@ -327,14 +331,14 @@ public class Framework {
             if (driver != null && !driver.toString().contains("null")
                     && !browser.equalsIgnoreCase("sikuli")) {
                 driver.quit();
-                System.out.println(" [WEB] DRIVER     : Quit [✓]");
+                log.info(" [WEB] DRIVER     : Quit [✓]");
             }
-            System.out.println(DIVIDER);
+            log.info(DIVIDER);
         }));
 
         // ── 7. Read macId ─────────────────────────────────────────────────────
         macId = DB_Tables.getMac();
-        System.out.println(" MAC  : " + macId);
+        log.info(" MAC  : " + macId);
 
         // ── 8. Business-hour check ────────────────────────────────────────────
         if ("y".equalsIgnoreCase(monitoringBusinessHour)) {
@@ -366,7 +370,7 @@ public class Framework {
         homedir = System.getProperty("user.dir");
         browsersts = 0;
         oldbrowser = "new";
-        System.out.println("Project Path  ------------->  " + homedir);
+        log.info("Project Path  ------------->  " + homedir);
 
         fillo = new Fillo();
         Connection con = null;
@@ -393,8 +397,8 @@ public class Framework {
                         ScriptName      = ApplicationName;
                         browser         = recordset.getField("Browser");
 
-                        System.out.println("Application Name  ---------> " + ApplicationName);
-                        System.out.println("Instance Name     ---------> " + functiontorun);
+                        log.info("Application Name  ---------> " + ApplicationName);
+                        log.info("Instance Name     ---------> " + functiontorun);
 
                         scriptStartTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
 
@@ -418,7 +422,7 @@ public class Framework {
                                         + (osName.equalsIgnoreCase("Windows") ? "\\" : "/")
                                         + sDataSheet;
 
-                                System.out.println("Sheet Path ----------------> " + datasheetspath);
+                                log.info("Sheet Path ----------------> " + datasheetspath);
 
                                 Fillo filloDs = new Fillo();
                                 Connection connectionDS = filloDs.getConnection(datasheetspath);
@@ -427,7 +431,7 @@ public class Framework {
                                         "select * from Sheet2 where RunStatus='Y'");
 
                                 double networkSpeed = DB_Tables.getNetworkSpeed();
-                                System.out.println("NetworkSpeed --------------> " + networkSpeed + " MB/s");
+                                log.info("NetworkSpeed --------------> " + networkSpeed + " MB/s");
 
                                 monitoringInstancesId = DB_Tables.getMonitoringInstancesId(dataSheetName);
                                 zone      = DB_Tables.getMonitoringDetails(monitoringInstancesId);
@@ -519,7 +523,7 @@ public class Framework {
                         // ── End of instance — update DB ───────────────────────
                         scriptEndTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
                         flag = false;
-                        System.out.println("\n" + DIVIDER);
+                        log.info("\n" + DIVIDER);
 
                         if (Monitoring_FrameWork.logoutFlag || exitFlag) {
                             DB_Tables.updateEndTimeRunTimeInstance(
@@ -529,17 +533,17 @@ public class Framework {
                             DB_Tables.updateEndTimeRunTimeInstance(
                                     "success", scriptEndTime, applicationId, runTimeInstanceId);
                         }
-                        System.out.println("**** Execution Completed: " + functiontorun + " ****\n");
+                        log.info("**** Execution Completed: " + functiontorun + " ****\n");
                     }
 
                 } catch (Exception datasheetError) {
-                    System.err.println("Error in DataSheet: " + datasheetError.getMessage());
+                    log.error("Error in DataSheet: " + datasheetError.getMessage());
                     datasheetError.printStackTrace();
                     System.exit(1);
                 }
             }
         } catch (Exception mainControllerError) {
-            System.err.println("Connection Error in MainController: " + mainControllerError.getMessage());
+            log.error("Connection Error in MainController: " + mainControllerError.getMessage());
             mainControllerError.printStackTrace();
             System.exit(1);
         }
@@ -621,12 +625,12 @@ public class Framework {
      */
     public static void StartBrowser(final String homedir, String browserName) throws Exception {
         browserToOpen = browserName;
-        System.out.println("Browser -------------------> " + browserName);
+        log.info("Browser -------------------> " + browserName);
 
         if (browsersts == 1 && (browserName.toUpperCase().contains("NEW")
                 || !oldbrowser.equalsIgnoreCase(browserName))) {
             driver.quit();
-            System.out.println("**** Browser closed ****");
+            log.info("**** Browser closed ****");
             browsersts = 0;
             browserName = browserName.replace("NEW", "").replace("new", "");
         }
@@ -637,7 +641,7 @@ public class Framework {
             BrowserFactory.launch(homedir, browserName, headless, fastPageLoad,
                     pageStability, pageLoadTime, defaultDownload, ffProfilePath);
         } else {
-            System.out.println("**** " + browserName + " already running ****");
+            log.info("**** " + browserName + " already running ****");
         }
     }
 
@@ -741,7 +745,7 @@ public class Framework {
         try {
             String processName = ManagementFactory.getRuntimeMXBean().getName();
             long pid = Long.parseLong(processName.split("@")[0]);
-            System.out.println("ProcessId     ------------->  " + pid);
+            log.info("ProcessId     ------------->  " + pid);
 
             File logsFolder = new File(homedir + File.separator + "Logs");
             logsFolder.mkdirs();
@@ -750,7 +754,7 @@ public class Framework {
                 bw.write(String.valueOf(pid));
             }
         } catch (IOException e) {
-            System.err.println("Could not write pid.txt: " + e.getMessage());
+            log.error("Could not write pid.txt: " + e.getMessage());
         }
     }
 }

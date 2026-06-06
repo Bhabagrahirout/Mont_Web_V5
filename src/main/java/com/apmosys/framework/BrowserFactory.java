@@ -4,9 +4,10 @@ import java.io.File;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.PageLoadStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -37,6 +38,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  */
 public class BrowserFactory {
 
+    private static final Logger log = LoggerFactory.getLogger(BrowserFactory.class);
+
     private BrowserFactory() {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -55,9 +58,9 @@ public class BrowserFactory {
         String baseDir = Framework.homedir;
         String name    = cfg.getBrowserName();
 
-        System.out.println("Browser -------------------> " + name);
-        System.out.println("OS      -------------------> " + os);
-        System.out.println("Architecture --------------> " + arch);
+        log.info("Browser : {}", name);
+        log.info("OS      : {}", os);
+        log.info("Arch    : {}", arch);
 
         String driverDir = baseDir + "/Drivers/" + os + "/" + name + "/" + arch;
 
@@ -199,8 +202,8 @@ public class BrowserFactory {
 
         FirefoxDriver driver = new FirefoxDriver(options);
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(90));
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(90));
+        log.info("Firefox driver started");
         return driver;
     }
 
@@ -230,7 +233,8 @@ public class BrowserFactory {
 
         EdgeDriver driver = new EdgeDriver(options);
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(90));
+        log.info("Edge driver started");
         return driver;
     }
 
@@ -260,7 +264,8 @@ public class BrowserFactory {
         InternetExplorerOptions options = new InternetExplorerOptions(caps);
         WebDriver driver = new InternetExplorerDriver(options);
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(90L, TimeUnit.SECONDS);
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(90));
+        log.info("IE driver started");
         return driver;
     }
 
@@ -271,7 +276,8 @@ public class BrowserFactory {
     private static WebDriver createSafari() {
         SafariDriver driver = new SafariDriver(new SafariOptions());
         driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(90));
+        log.info("Safari driver started");
         return driver;
     }
 

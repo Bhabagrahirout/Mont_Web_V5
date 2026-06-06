@@ -1,5 +1,8 @@
 package com.apmosys.framework;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -36,6 +39,9 @@ import org.openqa.selenium.WebElement;
  *          (BROWSER, WAIT, VERIFY …) make it obvious where it belongs.
  */
 public class ActionDispatcher {
+
+    private static final Logger log = LoggerFactory.getLogger(ActionDispatcher.class);
+
 
     private ActionDispatcher() {}
 
@@ -398,7 +404,7 @@ public class ActionDispatcher {
         } else if (action.equalsIgnoreCase("StartTime") || action.equalsIgnoreCase("getTimeForOTP")) {
             Framework.OTPcurrentTime = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                     .format(new java.util.Date());
-            System.out.println("[Dispatch] OTP start time recorded: " + Framework.OTPcurrentTime);
+            log.info("[Dispatch] OTP start time recorded: " + Framework.OTPcurrentTime);
 
         // ── BROWSER LIFECYCLE ─────────────────────────────────────────────────
         } else if (action.equalsIgnoreCase("startBrowser") || action.equalsIgnoreCase("CHROMELAUNECH")
